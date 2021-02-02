@@ -16,12 +16,15 @@ namespace Bicep.Core.Utils
         public IReadOnlyCollection<StringSyntax?>? ModulePropertyScopeValue { get; }
         public StringSyntax ModulePropertyNameValue { get; }
 
-        public ModuleDefinition(string moduleName, ResourceScope modulePropertyScopeType, ImmutableArray<StringSyntax?>? modulePropertyScopeValue, StringSyntax modulePropertyNameValue)
+        public bool IsConditionalModule { get; }
+
+        public ModuleDefinition(string moduleName, ResourceScope modulePropertyScopeType, ImmutableArray<StringSyntax?>? modulePropertyScopeValue, StringSyntax modulePropertyNameValue, bool isConditionalModule)
         {
             ModuleName = moduleName;
             ModulePropertyScopeType = modulePropertyScopeType;
             ModulePropertyScopeValue = modulePropertyScopeValue;
             ModulePropertyNameValue = modulePropertyNameValue;
+            IsConditionalModule = isConditionalModule;
         }
 
         public static readonly IEqualityComparer<ModuleDefinition> EqualityComparer = new ModuleComparer();

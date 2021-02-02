@@ -14,12 +14,15 @@ namespace Bicep.Core.Utils
         public string ResourceTypeFQDN { get; }
         public StringSyntax ResourceNamePropertyValue { get; }
 
-        public ResourceDefinition(string resourceName, ResourceSymbol? resourceScope, string resourceTypeFQDN, StringSyntax resourceNamePropertyValue)
+        public bool IsConditionalResource { get; }
+
+        public ResourceDefinition(string resourceName, ResourceSymbol? resourceScope, string resourceTypeFQDN, StringSyntax resourceNamePropertyValue, bool isConditionalResource)
         {
             ResourceName = resourceName;
             ResourceScope = resourceScope;
             ResourceTypeFQDN = resourceTypeFQDN;
             ResourceNamePropertyValue = resourceNamePropertyValue;
+            IsConditionalResource = isConditionalResource;
         }
 
 

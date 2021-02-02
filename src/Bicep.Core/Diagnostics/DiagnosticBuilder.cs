@@ -691,10 +691,11 @@ namespace Bicep.Core.Diagnostics
                 "BCP119",
                 $"Unsupported scope for extension resource deployment. Expected a resource reference.");
 
-            public Diagnostic RuntimePropertyNotAllowed(string property, IEnumerable<string> usableProperties, string accessedSymbol, IEnumerable<string>? variableDependencyChain) {
-                var variableDependencyChainClause = variableDependencyChain != null ? 
+            public Diagnostic RuntimePropertyNotAllowed(string property, IEnumerable<string> usableProperties, string accessedSymbol, IEnumerable<string>? variableDependencyChain)
+            {
+                var variableDependencyChainClause = variableDependencyChain != null ?
                  $"You are referencing a variable which cannot be calculated in time (\"{string.Join("\" -> \"", variableDependencyChain)}\"). " : "";
-                
+
                 return new ErrorDiagnostic(
                 TextSpan,
                 "BCP120",
@@ -703,12 +704,12 @@ namespace Bicep.Core.Diagnostics
             }
 
             public ErrorDiagnostic ResourceMultipleDeclarations(IEnumerable<string> resourceNames) => new(
-                TextSpan,                
+                TextSpan,
                 "BCP121",
                 $"Resources: {ToQuotedString(resourceNames)} are defined with this same name in a file. Rename them or split into different modules.");
 
             public ErrorDiagnostic ModuleMultipleDeclarations(IEnumerable<string> moduleNames) => new(
-                TextSpan,                
+                TextSpan,
                 "BCP122",
                 $"Modules: {ToQuotedString(moduleNames)} are defined with this same name and this same scope in a file. Rename them or split into different modules.");
 
@@ -766,6 +767,18 @@ namespace Bicep.Core.Diagnostics
                 TextSpan,
                 "BCP133",
                 "The unicode escape sequence is not valid. Valid unicode escape sequences range from \\u{0} to \\u{10FFFF}.");
+
+            public Diagnostic ResourceMultipleConditionalDeclarations(IEnumerable<string> resourceNames) => new(
+                TextSpan,
+                DiagnosticLevel.Warning,
+                "BCP134",
+                $"Resources: {ToQuotedString(resourceNames)} are defined with this same name in a file. Deployment will fail if applied conditions are not mutually exlusive.");
+
+            public Diagnostic ModuleMultipleConditionalDeclarations(IEnumerable<string> moduleNames) => new(
+                TextSpan,
+                DiagnosticLevel.Warning,
+                "BCP135",
+                $"Modules: {ToQuotedString(moduleNames)} are defined with this same name and this same scope in a file. Deployment will fail if applied conditions are not mutually exlusive.");
         }
 
         public static DiagnosticBuilderInternal ForPosition(TextSpan span)

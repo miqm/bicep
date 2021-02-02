@@ -111,9 +111,11 @@ namespace Bicep.Core.Emit
             foreach (var duplicatedResourceGroup in duplicateResources)
             {
                 var duplicatedResourceNames = duplicatedResourceGroup.Select(x => x.ResourceName).ToArray();
+                var areConditionalOnly = duplicatedResourceGroup.All(x => x.IsConditionalResource);
                 foreach (var duplicatedResource in duplicatedResourceGroup)
                 {
-                    yield return DiagnosticBuilder.ForPosition(duplicatedResource.ResourceNamePropertyValue).ResourceMultipleDeclarations(duplicatedResourceNames);
+                    var builder = DiagnosticBuilder.ForPosition(duplicatedResource.ResourceNamePropertyValue);
+                    yield return areConditionalOnly ? builder.ResourceMultipleConditionalDeclarations(duplicatedResourceNames) : builder.ResourceMultipleDeclarations(duplicatedResourceNames);
                 }
             }
 
@@ -124,9 +126,11 @@ namespace Bicep.Core.Emit
             foreach (var duplicatedModuleGroup in duplicateModules)
             {
                 var duplicatedModuleNames = duplicatedModuleGroup.Select(x => x.ModuleName).ToArray();
+                var areConditionalOnly = duplicatedModuleGroup.All(x => x.IsConditionalModule);
                 foreach (var duplicatedModule in duplicatedModuleGroup)
                 {
-                    yield return DiagnosticBuilder.ForPosition(duplicatedModule.ModulePropertyNameValue).ModuleMultipleDeclarations(duplicatedModuleNames);
+                    var builder = DiagnosticBuilder.ForPosition(duplicatedModule.ModulePropertyNameValue);
+                    yield return areConditionalOnly ? builder.ModuleMultipleConditionalDeclarations(duplicatedModuleNames) : builder.ModuleMultipleDeclarations(duplicatedModuleNames);
                 }
             }
         }
@@ -148,7 +152,7 @@ namespace Bicep.Core.Emit
 
                 var propertyScopeValue = (module.SafeGetBodyPropertyValue(LanguageConstants.ResourceScopePropertyName) as FunctionCallSyntax)?.Arguments.Select(x => x.Expression as StringSyntax).ToImmutableArray();
 
-                yield return new ModuleDefinition(module.Name, moduleScopeData[module].RequestedScope, propertyScopeValue, propertyNameValue);
+                yield return new ModuleDefinition(module.Name, moduleScopeData[module].RequestedScope, propertyScopeValue, propertyNameValue, module.DeclaringModule.IfCondition is not null);
             }
         }
 
@@ -168,7 +172,7 @@ namespace Bicep.Core.Emit
                     continue;
                 }
 
-                yield return new ResourceDefinition(resource.Name, resourceScopeData[resource], resourceType.TypeReference.FullyQualifiedType, namePropertyValue);
+                yield return new ResourceDefinition(resource.Name, resourceScopeData[resource], resourceType.TypeReference.FullyQualifiedType, namePropertyValue, resource.DeclaringResource.IfCondition is not null);
             }
         }
     }
