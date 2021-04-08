@@ -258,7 +258,7 @@ output o int = 42
         public void CompletionsForModifierDefaultValuesShouldIncludeFunctionsValidInDefaultValues()
         {
             var fileResolver = new FileResolver();
-            var grouping = SyntaxTreeGroupingFactory.CreateFromText(@"param p string, fileResolver {
+            var grouping = SyntaxTreeGroupingFactory.CreateFromText(@"param p string {
   defaultValue: 
 }", fileResolver);
 
@@ -267,7 +267,7 @@ output o int = 42
             var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
             var context = BicepCompletionContext.Create(compilation, offset);
 
-            var provider = new BicepCompletionProvider(new FileResolver(), new ResourceSnippetsProvider());
+            var provider = new BicepCompletionProvider(fileResolver, new ResourceSnippetsProvider());
             var completions = provider.GetFilteredCompletions(compilation, context).ToList();
 
             AssertExpectedFunctions(completions, expectParamDefaultFunctions: true);
