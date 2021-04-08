@@ -16,6 +16,7 @@ using Bicep.Core.UnitTests.Utils;
 using Bicep.Core.Workspaces;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -52,7 +53,7 @@ namespace Bicep.Core.IntegrationTests.Emit
         [TestMethod]
         public void TemplateEmitter_output_should_not_include_UTF8_BOM()
         {
-            var syntaxTreeGrouping = SyntaxTreeGroupingFactory.CreateFromText("");
+            var syntaxTreeGrouping = SyntaxTreeGroupingFactory.CreateFromText("", new FileResolver());
             var compiledFilePath = FileHelper.GetResultFilePath(this.TestContext, "main.json");
 
             // emitting the template should be successful
@@ -129,7 +130,7 @@ this
 
         private EmitResult EmitTemplate(SyntaxTreeGrouping syntaxTreeGrouping, string filePath, string assemblyFileVersion)
         {
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), syntaxTreeGrouping);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), syntaxTreeGrouping, new Mock<IFileResolver>().Object);
             var emitter = new TemplateEmitter(compilation.GetEntrypointSemanticModel(), assemblyFileVersion);
 
             using var stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
@@ -138,7 +139,7 @@ this
 
         private EmitResult EmitTemplate(SyntaxTreeGrouping syntaxTreeGrouping, MemoryStream memoryStream, string assemblyFileVersion)
         {
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), syntaxTreeGrouping);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), syntaxTreeGrouping, new Mock<IFileResolver>().Object);
             var emitter = new TemplateEmitter(compilation.GetEntrypointSemanticModel(), assemblyFileVersion);
 
             TextWriter tw = new StreamWriter(memoryStream);

@@ -56,7 +56,7 @@ namespace Bicep.Core.Syntax
             var pathValue = pathSyntax.TryGetLiteralValue();
             if (pathValue == null)
             {
-                failureBuilder = x => x.ModulePathInterpolationUnsupported();
+                failureBuilder = x => x.FilePathInterpolationUnsupported();
                 return null;                
             }
             

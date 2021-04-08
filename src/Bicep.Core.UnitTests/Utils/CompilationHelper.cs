@@ -13,6 +13,7 @@ using System;
 using Bicep.Core.TypeSystem;
 using Newtonsoft.Json.Linq;
 using Bicep.Core.Syntax;
+using Bicep.Core.FileSystem;
 
 namespace Bicep.Core.UnitTests.Utils
 {
@@ -29,10 +30,11 @@ namespace Bicep.Core.UnitTests.Utils
         public static CompilationResult Compile(IResourceTypeProvider resourceTypeProvider, params (string fileName, string fileContents)[] files)
         {
             var (uriDictionary, entryUri) = CreateFileDictionary(files);
-            
-            var syntaxTreeGrouping = SyntaxTreeGroupingFactory.CreateForFiles(uriDictionary, entryUri);
 
-            return Compile(new Compilation(resourceTypeProvider, syntaxTreeGrouping));
+            var fileResolver = new FileResolver();
+            var syntaxTreeGrouping = SyntaxTreeGroupingFactory.CreateForFiles(uriDictionary, entryUri, fileResolver);
+
+            return Compile(new Compilation(resourceTypeProvider, syntaxTreeGrouping, fileResolver));
         }
 
         public static CompilationResult Compile(params (string fileName, string fileContents)[] files)

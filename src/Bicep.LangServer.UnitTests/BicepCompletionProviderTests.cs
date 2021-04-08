@@ -30,8 +30,9 @@ namespace Bicep.LangServer.UnitTests
         [TestMethod]
         public void DeclarationSnippetsShouldBeValid()
         {
-            var grouping = SyntaxTreeGroupingFactory.CreateFromText(string.Empty);
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping);
+            var fileResolver = new FileResolver();
+            var grouping = SyntaxTreeGroupingFactory.CreateFromText(string.Empty, fileResolver);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
             compilation.GetEntrypointSemanticModel().GetAllDiagnostics().Should().BeEmpty();
 
             ResourceSnippetsProvider resourceSnippetsProvider = new ResourceSnippetsProvider();
@@ -108,8 +109,9 @@ namespace Bicep.LangServer.UnitTests
         [TestMethod]
         public void DeclarationContextShouldReturnKeywordCompletions()
         {
-            var grouping = SyntaxTreeGroupingFactory.CreateFromText(string.Empty);
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping);
+            var fileResolver = new FileResolver();
+            var grouping = SyntaxTreeGroupingFactory.CreateFromText(string.Empty, fileResolver);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
             compilation.GetEntrypointSemanticModel().GetAllDiagnostics().Should().BeEmpty();
 
             var provider = new BicepCompletionProvider(new FileResolver(), new ResourceSnippetsProvider());
@@ -181,6 +183,7 @@ namespace Bicep.LangServer.UnitTests
         [TestMethod]
         public void NonDeclarationContextShouldIncludeDeclaredSymbols()
         {
+            var fileResolver = new FileResolver();
             var grouping = SyntaxTreeGroupingFactory.CreateFromText(@"
 param p string
 var v = 
@@ -188,9 +191,9 @@ resource r 'Microsoft.Foo/foos@2020-09-01' = {
   name: 'foo'
 }
 output o int = 42
-");
+", fileResolver);
             var offset = grouping.EntryPoint.ProgramSyntax.Declarations.OfType<VariableDeclarationSyntax>().Single().Value.Span.Position;
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
             
             var provider = new BicepCompletionProvider(new FileResolver(), new ResourceSnippetsProvider());
             var context = BicepCompletionContext.Create(compilation, offset);
@@ -226,8 +229,9 @@ output o int = 42
         [TestMethod]
         public void CompletionsForOneLinerParameterDefaultValueShouldIncludeFunctionsValidInDefaultValues()
         {
-            var grouping = SyntaxTreeGroupingFactory.CreateFromText(@"param p string = ");
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping);
+            var fileResolver = new FileResolver();
+            var grouping = SyntaxTreeGroupingFactory.CreateFromText(@"param p string = ", fileResolver);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
 
             var offset = ((ParameterDefaultValueSyntax) grouping.EntryPoint.ProgramSyntax.Declarations.OfType<ParameterDeclarationSyntax>().Single().Modifier!).DefaultValue.Span.Position;
 
@@ -253,13 +257,14 @@ output o int = 42
         [TestMethod]
         public void CompletionsForModifierDefaultValuesShouldIncludeFunctionsValidInDefaultValues()
         {
-            var grouping = SyntaxTreeGroupingFactory.CreateFromText(@"param p string {
+            var fileResolver = new FileResolver();
+            var grouping = SyntaxTreeGroupingFactory.CreateFromText(@"param p string, fileResolver {
   defaultValue: 
-}");
+}", fileResolver);
 
             var offset = ((ObjectSyntax) grouping.EntryPoint.ProgramSyntax.Declarations.OfType<ParameterDeclarationSyntax>().Single().Modifier!).Properties.Single().Value.Span.Position;
 
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
             var context = BicepCompletionContext.Create(compilation, offset);
 
             var provider = new BicepCompletionProvider(new FileResolver(), new ResourceSnippetsProvider());
@@ -282,6 +287,7 @@ output o int = 42
         [TestMethod]
         public void DeclaringSymbolWithFunctionNameShouldHideTheFunctionCompletion()
         {
+            var fileResolver = new FileResolver();
             var grouping = SyntaxTreeGroupingFactory.CreateFromText(@"
 param concat string
 var resourceGroup = true
@@ -289,10 +295,10 @@ resource base64 'Microsoft.Foo/foos@2020-09-01' = {
   name: 'foo'
 }
 output length int = 
-");
+", fileResolver);
             var offset = grouping.EntryPoint.ProgramSyntax.Declarations.OfType<OutputDeclarationSyntax>().Single().Value.Span.Position;
 
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
             var provider = new BicepCompletionProvider(new FileResolver(), new ResourceSnippetsProvider());
             var context = BicepCompletionContext.Create(compilation, offset);
             var completions = provider.GetFilteredCompletions(compilation, context).ToList();
@@ -333,8 +339,9 @@ output length int =
         [TestMethod]
         public void OutputTypeContextShouldReturnDeclarationTypeCompletions()
         {
-            var grouping = SyntaxTreeGroupingFactory.CreateFromText("output test ");
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping);
+            var fileResolver = new FileResolver();
+            var grouping = SyntaxTreeGroupingFactory.CreateFromText("output test ", fileResolver);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
             var provider = new BicepCompletionProvider(new FileResolver(), new ResourceSnippetsProvider());
 
             var offset = grouping.EntryPoint.ProgramSyntax.Declarations.OfType<OutputDeclarationSyntax>().Single().Type.Span.Position;
@@ -350,8 +357,9 @@ output length int =
         [TestMethod]
         public void ParameterTypeContextShouldReturnDeclarationTypeCompletions()
         {
-            var grouping = SyntaxTreeGroupingFactory.CreateFromText("param foo ");
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping);
+            var fileResolver = new FileResolver();
+            var grouping = SyntaxTreeGroupingFactory.CreateFromText("param foo ", fileResolver);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
             var provider = new BicepCompletionProvider(new FileResolver(), new ResourceSnippetsProvider());
 
             var offset = grouping.EntryPoint.ProgramSyntax.Declarations.OfType<ParameterDeclarationSyntax>().Single().Type.Span.Position;
@@ -397,8 +405,9 @@ output length int =
         [TestMethod]
         public void VerifyParameterTypeCompletionWithPrecedingComment()
         {
-            var grouping = SyntaxTreeGroupingFactory.CreateFromText("/*test*/param foo ");
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping);
+            var fileResolver = new FileResolver();
+            var grouping = SyntaxTreeGroupingFactory.CreateFromText("/*test*/param foo ", fileResolver);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
             var provider = new BicepCompletionProvider(new FileResolver(), new ResourceSnippetsProvider());
 
             var offset = grouping.EntryPoint.ProgramSyntax.Declarations.OfType<ParameterDeclarationSyntax>().Single().Type.Span.Position;
@@ -455,8 +464,9 @@ output length int =
 */")]
         public void CommentShouldNotGiveAnyCompletions(string codeFragment)
         {
-        var grouping = SyntaxTreeGroupingFactory.CreateFromText(codeFragment);
-        var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping);
+            var fileResolver = new FileResolver();
+            var grouping = SyntaxTreeGroupingFactory.CreateFromText(codeFragment, fileResolver);
+        var compilation = new Compilation(TestResourceTypeProvider.Create(), grouping, fileResolver);
         var provider = new BicepCompletionProvider(new FileResolver(), new ResourceSnippetsProvider());
 
         var offset = codeFragment.IndexOf('|');

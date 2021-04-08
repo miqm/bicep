@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bicep.Core.Diagnostics;
 using Bicep.Core.Extensions;
+using Bicep.Core.FileSystem;
 using Bicep.Core.Resources;
 using Bicep.Core.Semantics;
 using Bicep.Core.Syntax;
@@ -23,7 +24,8 @@ namespace Bicep.Core.IntegrationTests
         {
             var typeProvider = ResourceTypeProviderHelper.CreateMockTypeProvider(definedTypes);
 
-            var compilation = new Compilation(typeProvider, SyntaxTreeGroupingFactory.CreateFromText(programText));
+            var fileResolver = new FileResolver();
+            var compilation = new Compilation(typeProvider, SyntaxTreeGroupingFactory.CreateFromText(programText, fileResolver), fileResolver);
             return compilation.GetEntrypointSemanticModel();
         }
 

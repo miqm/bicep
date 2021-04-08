@@ -871,7 +871,7 @@ namespace Bicep.Core.TypeSystem
             });
 
         public override void VisitFunctionCallSyntax(FunctionCallSyntax syntax)
-            => AssignType(syntax, () => {
+            => AssignTypeWithDiagnostics(syntax, diagnostics => {
                 var errors = new List<ErrorDiagnostic>();
 
                 foreach (TypeSymbol argumentType in this.GetArgumentTypes(syntax.Arguments).ToArray())
@@ -886,7 +886,7 @@ namespace Bicep.Core.TypeSystem
                         return ErrorType.Create(errors.Concat(errorSymbol.GetDiagnostics()));
 
                     case FunctionSymbol function:
-                        return this.GetFunctionSymbolType(function, syntax.OpenParen, syntax.CloseParen, syntax.Arguments, errors);
+                        return this.GetFunctionSymbolType(function, syntax.OpenParen, syntax.CloseParen, syntax.Arguments, errors, diagnostics);
 
                     default:
                         return ErrorType.Create(errors.Append(DiagnosticBuilder.ForPosition(syntax.Name.Span).SymbolicNameIsNotAFunction(syntax.Name.IdentifierName)));
@@ -894,7 +894,7 @@ namespace Bicep.Core.TypeSystem
             });
 
         public override void VisitInstanceFunctionCallSyntax(InstanceFunctionCallSyntax syntax)
-            => AssignType(syntax, () => {
+            => AssignTypeWithDiagnostics(syntax, diagnostics => {
                 var errors = new List<ErrorDiagnostic>();
 
                 var baseType = typeManager.GetTypeInfo(syntax.BaseExpression);
@@ -933,7 +933,7 @@ namespace Bicep.Core.TypeSystem
                         return ErrorType.Create(errors.Concat(errorSymbol.GetDiagnostics()));
 
                     case FunctionSymbol functionSymbol:
-                        return this.GetFunctionSymbolType(functionSymbol, syntax.OpenParen, syntax.CloseParen, syntax.Arguments, errors);
+                        return this.GetFunctionSymbolType(functionSymbol, syntax.OpenParen, syntax.CloseParen, syntax.Arguments, errors, diagnostics);
 
                     default:
                         return ErrorType.Create(errors.Append(DiagnosticBuilder.ForPosition(syntax.Name.Span).SymbolicNameIsNotAFunction(syntax.Name.IdentifierName)));
@@ -1065,7 +1065,8 @@ namespace Bicep.Core.TypeSystem
             Token openParen,
             Token closeParen,
             ImmutableArray<FunctionArgumentSyntax> argumentSyntaxes,
-            IList<ErrorDiagnostic> errors)
+            IList<ErrorDiagnostic> errors,
+            IDiagnosticWriter diagnosticWriter)
         {
             // Recover argument type errors so we can continue type checking for the parent function call.
             var argumentTypes = this.GetRecoveredArgumentTypes(argumentSyntaxes).ToArray();
@@ -1116,7 +1117,14 @@ namespace Bicep.Core.TypeSystem
             {
                 // we have an exact match or a single ambiguous match
                 // return its type
-                return matches.Single().ReturnTypeBuilder(argumentSyntaxes);
+                FunctionOverload functionOverload = matches.Single();
+                if (functionOverload.ReturnTypeBuilderAdvanced is not null)
+                {
+                    var context = new FunctionOverload.Context(binder, diagnosticWriter, argumentSyntaxes.Select((syntax, i) => (syntax, argumentTypes[i])).ToArray());
+                    return functionOverload.ReturnTypeBuilderAdvanced(context);
+                }
+
+                return functionOverload.ReturnTypeBuilder(argumentSyntaxes);                
             }
 
             // function arguments are ambiguous (due to "any" type)

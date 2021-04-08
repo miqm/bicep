@@ -65,7 +65,7 @@ namespace Bicep.Decompiler
                 {
                     var moduleRelativePath = SyntaxHelper.TryGetModulePath(module, out _);
                     if (moduleRelativePath == null ||
-                        !SyntaxTreeGroupingBuilder.ValidateModulePath(moduleRelativePath, out _) ||
+                        !SyntaxTreeGroupingBuilder.ValidateFilePath(moduleRelativePath, out _) ||
                         !Uri.TryCreate(bicepUri, moduleRelativePath, out var moduleUri))
                     {
                         // Do our best, but keep going if we fail to resolve a module file
@@ -110,8 +110,9 @@ namespace Bicep.Decompiler
         private static bool RewriteSyntax(IResourceTypeProvider resourceTypeProvider, Workspace workspace, Uri entryUri, Func<SemanticModel, SyntaxRewriteVisitor> rewriteVisitorBuilder)
         {
             var hasChanges = false;
-            var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(new FileResolver(), workspace, entryUri);
-            var compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping);
+            var fileResolver = new FileResolver();
+            var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(fileResolver, workspace, entryUri);
+            var compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping, fileResolver);
 
             foreach (var (fileUri, syntaxTree) in workspace.GetActiveSyntaxTrees())
             {
@@ -126,8 +127,8 @@ namespace Bicep.Decompiler
                     var newSyntaxTree = new SyntaxTree(fileUri, ImmutableArray<int>.Empty, newProgramSyntax);
                     workspace.UpsertSyntaxTrees(newSyntaxTree.AsEnumerable());
 
-                    syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(new FileResolver(), workspace, entryUri);
-                    compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping);
+                    syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(fileResolver, workspace, entryUri);
+                    compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping, fileResolver);
                 }
             }
 

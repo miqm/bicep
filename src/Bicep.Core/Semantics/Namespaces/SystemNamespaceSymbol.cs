@@ -3,7 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
+using System.Text;
 using Bicep.Core.Diagnostics;
 using Bicep.Core.Extensions;
 using Bicep.Core.Syntax;
@@ -389,6 +391,65 @@ namespace Bicep.Core.Semantics.Namespaces
                 .WithReturnType(LanguageConstants.String)
                 .WithDescription("Returns a value in the format of a globally unique identifier. **This function can only be used in the default value for a parameter**.")
                 .WithFlags(FunctionFlags.ParamDefaultsOnly)
+                .Build(),
+
+            new FunctionOverloadBuilder("loadTextContent")
+                .WithDescription("Load content of specified file into a string. Content loading occurs during compilation, not in runtime. Maximum allowed content size is 131,072 characters (including line endings).")
+                .WithRequiredParameter("filePath", LanguageConstants.String, "File's path which content will be loaded")
+                .WithOptionalParameter("encoding", LanguageConstants.String, "File encoding. If not provided, Bicep will try to automatically detect the encoding of a file based on the presence of byte order marks.")
+                .WithAdvancedReturnType(LanguageConstants.String, ctxt => {
+                    if (ctxt.Arguments[0].syntax.Expression is not StringSyntax filePathSyntax)
+                    {
+                        return LanguageConstants.String;
+                    }
+
+                    if (filePathSyntax.IsInterpolated())
+                    {
+                        ctxt.Diagnostics.Write(DiagnosticBuilder.ForPosition(ctxt.Arguments[0].syntax).CompileTimeConstantRequired());
+                        return LanguageConstants.String;
+                    }
+
+                    var filePath = filePathSyntax.TryGetLiteralValue() ?? string.Empty;
+                    if (!SyntaxTreeGroupingBuilder.ValidateFilePath(filePath, out var validateFilePathFailureBuilder))
+                    {
+                        ctxt.Diagnostics.Write(validateFilePathFailureBuilder.Invoke(DiagnosticBuilder.ForPosition(ctxt.Arguments[0].syntax)));
+                        return LanguageConstants.String;
+                    }
+
+                    var fileUri = ctxt.Binder.FileResolver.TryResolveFilePath(ctxt.Binder.FileUri, filePath);
+                    if (fileUri is null)
+                    {
+                        ctxt.Diagnostics.Write(DiagnosticBuilder.ForPosition(ctxt.Arguments[0].syntax).FilePathCouldNotBeResolved(filePath, ctxt.Binder.FileUri.LocalPath));
+                        return LanguageConstants.String;
+                    }
+
+                    if (!fileUri.IsFile)
+                    {
+                        ctxt.Diagnostics.Write(DiagnosticBuilder.ForPosition(ctxt.Arguments[0].syntax).UnableToLoadNonFileUri(fileUri));
+                        return LanguageConstants.String;
+                    }
+
+                    var fileEncoding = Encoding.Default;
+                    if (ctxt.Arguments.Length > 1)
+                    {
+                        fileEncoding = Encoding.UTF8; //todo read encoding
+                    }
+
+                    if (!ctxt.Binder.FileResolver.TryRead(fileUri, out var fileContent, out var fileReadFailureBuilder, fileEncoding, LanguageConstants.MaxLiteralCharacterLimit))
+                    {
+                        ctxt.Diagnostics.Write(fileReadFailureBuilder.Invoke(DiagnosticBuilder.ForPosition(ctxt.Arguments[0].syntax)));
+                        return LanguageConstants.String;
+                    }
+
+                    return new StringLiteralType(fileContent);
+
+                })
+                .Build(),
+
+            new FunctionOverloadBuilder("loadContentAsBase64")
+                .WithReturnType(LanguageConstants.String)
+                .WithDescription("Loads specified file as base64 string. File loading occurs during compilation, not in runtime. Maximum allowed size is 96Kb.")
+                .WithRequiredParameter("filePath", LanguageConstants.String, "File path which will be loaded")
                 .Build()
         }.ToImmutableArray();
 
@@ -519,7 +580,7 @@ namespace Bicep.Core.Semantics.Namespaces
                 .WithDescription("Defines metadata of the parameter.")
                 .WithRequiredParameter("object", LanguageConstants.Object, "The metadata object.")
                 .WithFlags(FunctionFlags.ParameterDecorator)
-                .WithValidator((_, decoratorSyntax, _, typeManager, diagnosticWriter) => 
+                .WithValidator((_, decoratorSyntax, _, typeManager, diagnosticWriter) =>
                     TypeValidator.NarrowTypeAndCollectDiagnostics(typeManager, SingleArgumentSelector(decoratorSyntax), LanguageConstants.ParameterModifierMetadata, diagnosticWriter))
                 .WithEvaluator(MergeToTargetObject("metadata", SingleArgumentSelector))
                 .Build();

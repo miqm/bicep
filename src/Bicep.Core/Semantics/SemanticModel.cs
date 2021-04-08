@@ -6,6 +6,7 @@ using System.Linq;
 using Bicep.Core.Diagnostics;
 using Bicep.Core.Emit;
 using Bicep.Core.Extensions;
+using Bicep.Core.FileSystem;
 using Bicep.Core.Syntax;
 using Bicep.Core.TypeSystem;
 
@@ -17,7 +18,7 @@ namespace Bicep.Core.Semantics
         private readonly Lazy<SymbolHierarchy> symbolHierarchyLazy;
         private readonly Lazy<ResourceAncestorGraph> resourceAncestorsLazy;
 
-        public SemanticModel(Compilation compilation, SyntaxTree syntaxTree)
+        public SemanticModel(Compilation compilation, SyntaxTree syntaxTree, IFileResolver fileResolver)
         {
             Compilation = compilation;
             SyntaxTree = syntaxTree;
@@ -28,7 +29,7 @@ namespace Bicep.Core.Semantics
             var symbolContext = new SymbolContext(compilation, this);
             SymbolContext = symbolContext;
 
-            Binder = new Binder(syntaxTree, symbolContext);
+            Binder = new Binder(syntaxTree, symbolContext, fileResolver);
             TypeManager = new TypeManager(compilation.ResourceTypeProvider, Binder);
 
             // name binding is done

@@ -650,11 +650,21 @@ namespace Bicep.Core.Emit
             throw new NotImplementedException($"Unexpected expression type '{converted.GetType().Name}'.");
         }
 
-        private static LanguageExpression ConvertFunction(string functionName, IEnumerable<LanguageExpression> arguments)
+        private LanguageExpression ConvertFunction(string functionName, IEnumerable<LanguageExpression> arguments)
         {
             if (string.Equals("any", functionName, LanguageConstants.IdentifierComparison))
             {
                 // this is the any function - don't generate a function call for it
+                return arguments.Single();
+            }
+            if (string.Equals("loadContent", functionName, LanguageConstants.IdentifierComparison))
+            {                
+                //TODO: open file and load it's content as string
+                return arguments.Single();
+            }
+            if (string.Equals("loadFile", functionName, LanguageConstants.IdentifierComparison))
+            {
+                //TODO: encode file as base64 and put it as string
                 return arguments.Single();
             }
 

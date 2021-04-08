@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Bicep.Core.Diagnostics;
 using Bicep.Core.Extensions;
 using Bicep.Core.Syntax;
 using Bicep.Core.TypeSystem;
@@ -13,12 +14,30 @@ namespace Bicep.Core.Semantics
     public class FunctionOverload
     {
         public delegate TypeSymbol ReturnTypeBuilderDelegate(IEnumerable<FunctionArgumentSyntax> arguments);
+        public delegate TypeSymbol AdvancedReturnTypeBuilderDelegate(Context context);
 
-        public FunctionOverload(string name, string description, ReturnTypeBuilderDelegate returnTypeBuilder, TypeSymbol returnType, IEnumerable<FixedFunctionParameter> fixedParameters, VariableFunctionParameter? variableParameter, FunctionFlags flags = FunctionFlags.Default)
+        public class Context
+        {
+            public IBinder Binder { get; }
+            public IDiagnosticWriter Diagnostics { get; }
+            public (FunctionArgumentSyntax syntax, TypeSymbol)[] Arguments { get; }
+            public IDictionary<string, object> Data { get; }
+
+            public Context(IBinder binder, IDiagnosticWriter diagnostic, (FunctionArgumentSyntax syntax, TypeSymbol)[] arguments)
+            {
+                Binder = binder;
+                Diagnostics = diagnostic;
+                Arguments = arguments;
+                Data = new Dictionary<string, object>();
+            }
+        }
+
+        public FunctionOverload(string name, string description, ReturnTypeBuilderDelegate returnTypeBuilder, TypeSymbol returnType, IEnumerable<FixedFunctionParameter> fixedParameters, VariableFunctionParameter? variableParameter, AdvancedReturnTypeBuilderDelegate? advancedReturnTypeBuilder, FunctionFlags flags = FunctionFlags.Default)
         {
             this.Name = name;
             this.Description = description;
             this.ReturnTypeBuilder = returnTypeBuilder;
+            this.ReturnTypeBuilderAdvanced = advancedReturnTypeBuilder;
             this.FixedParameters = fixedParameters.ToImmutableArray();
             this.VariableParameter = variableParameter;
             this.Flags = flags;
@@ -42,6 +61,8 @@ namespace Bicep.Core.Semantics
         public VariableFunctionParameter? VariableParameter { get; }
 
         public ReturnTypeBuilderDelegate ReturnTypeBuilder { get; }
+
+        public AdvancedReturnTypeBuilderDelegate? ReturnTypeBuilderAdvanced { get; }
 
         public FunctionFlags Flags { get; }
 

@@ -263,8 +263,8 @@ param ${1:Identifier} string", context.ReplacementRange);
             }
 
             // These should only fail if we're not able to resolve cwd path or the entered string
-            if (FileResolver.TryResolveModulePath(model.SyntaxTree.FileUri, ".") is not { } cwdUri
-                || FileResolver.TryResolveModulePath(cwdUri, entered) is not { } query)
+            if (FileResolver.TryResolveFilePath(model.SyntaxTree.FileUri, ".") is not { } cwdUri
+                || FileResolver.TryResolveFilePath(cwdUri, entered) is not { } query)
             {
                 return Enumerable.Empty<CompletionItem>();
             }
@@ -280,7 +280,7 @@ param ${1:Identifier} string", context.ReplacementRange);
                 files = FileResolver.GetFiles(query, string.Empty);
                 dirs = FileResolver.GetDirectories(query, string.Empty);
             }
-            else if (FileResolver.TryResolveModulePath(query, ".") is { } queryParent)
+            else if (FileResolver.TryResolveFilePath(query, ".") is { } queryParent)
             {
                 files = FileResolver.GetFiles(queryParent, "");
                 dirs = FileResolver.GetDirectories(queryParent, "");

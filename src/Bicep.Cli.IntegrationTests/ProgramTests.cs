@@ -336,8 +336,9 @@ output myOutput string = 'hello!'
 
         private static IEnumerable<string> GetAllDiagnostics(string bicepFilePath)
         {
-            var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(new FileResolver(), new Workspace(), PathHelper.FilePathToFileUrl(bicepFilePath));
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), syntaxTreeGrouping);
+            var fileResolver = new FileResolver();
+            var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(fileResolver, new Workspace(), PathHelper.FilePathToFileUrl(bicepFilePath));
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), syntaxTreeGrouping, fileResolver);
 
             var output = new List<string>();
             foreach (var (syntaxTree, diagnostics) in compilation.GetAllDiagnosticsBySyntaxTree())

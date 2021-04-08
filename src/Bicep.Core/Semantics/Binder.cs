@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Bicep.Core.Extensions;
+using Bicep.Core.FileSystem;
 using Bicep.Core.Semantics.Namespaces;
 using Bicep.Core.Syntax;
 using Bicep.Core.TypeSystem;
@@ -17,10 +18,10 @@ namespace Bicep.Core.Semantics
         private readonly ImmutableDictionary<SyntaxBase, Symbol> bindings;
         private readonly ImmutableDictionary<DeclaredSymbol, ImmutableArray<DeclaredSymbol>> cyclesBySymbol;
 
-        public Binder(SyntaxTree syntaxTree, ISymbolContext symbolContext)
+        public Binder(SyntaxTree syntaxTree, ISymbolContext symbolContext, IFileResolver fileResolver)
         {
             // TODO use lazy or some other pattern for init
-            this.syntaxTree = syntaxTree;
+            this.syntaxTree = syntaxTree;            
             this.TargetScope = SyntaxHelper.GetTargetScope(syntaxTree);
             var (declarations, outermostScopes) = DeclarationVisitor.GetDeclarations(syntaxTree, symbolContext);
             var uniqueDeclarations = GetUniqueDeclarations(declarations);
@@ -39,6 +40,8 @@ namespace Bicep.Core.Semantics
                 declarations.OfType<ResourceSymbol>(),
                 declarations.OfType<ModuleSymbol>(),
                 declarations.OfType<OutputSymbol>());
+
+            FileResolver = fileResolver;
         }
 
         public ResourceScope TargetScope { get; }
@@ -66,6 +69,11 @@ namespace Bicep.Core.Semantics
 
         public ImmutableArray<DeclaredSymbol>? TryGetCycle(DeclaredSymbol declaredSymbol)
             => this.cyclesBySymbol.TryGetValue(declaredSymbol, out var cycle) ? cycle : null;
+
+
+        public Uri FileUri => syntaxTree.FileUri;
+
+        public IFileResolver FileResolver { get; }
 
         private static ImmutableDictionary<string, DeclaredSymbol> GetUniqueDeclarations(IEnumerable<DeclaredSymbol> outermostDeclarations)
         {

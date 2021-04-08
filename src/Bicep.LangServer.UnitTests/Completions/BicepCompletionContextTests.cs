@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 using System;
+using Bicep.Core.FileSystem;
 using Bicep.Core.Semantics;
 using Bicep.Core.TypeSystem.Az;
 using Bicep.Core.UnitTests.Utils;
@@ -17,7 +18,8 @@ namespace Bicep.LangServer.UnitTests.Completions
         public void ZeroMatchingNodes_Create_ShouldThrow()
         {
             const string text = "var foo = 42";
-            var compilation = new Compilation(new AzResourceTypeProvider(), SyntaxTreeGroupingFactory.CreateFromText(text));
+            var fileResolver = new FileResolver();
+            var compilation = new Compilation(new AzResourceTypeProvider(), SyntaxTreeGroupingFactory.CreateFromText(text, fileResolver), fileResolver);
 
             Action fail = () => BicepCompletionContext.Create(compilation, text.Length + 2);
             fail.Should().Throw<ArgumentException>().WithMessage("The specified offset 14 is outside the span of the specified ProgramSyntax node.");

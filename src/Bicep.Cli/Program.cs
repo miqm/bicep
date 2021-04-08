@@ -151,8 +151,9 @@ namespace Bicep.Cli
 
         private void BuildToFile(IDiagnosticLogger logger, string bicepPath, string outputPath)
         {
-            var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(new FileResolver(), new Workspace(), PathHelper.FilePathToFileUrl(bicepPath));
-            var compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping);
+            var fileResolver = new FileResolver();
+            var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(fileResolver, new Workspace(), PathHelper.FilePathToFileUrl(bicepPath));
+            var compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping, fileResolver);
 
             var success = LogDiagnosticsAndCheckSuccess(logger, compilation);
             if (success)
@@ -171,8 +172,9 @@ namespace Bicep.Cli
                 Formatting = Formatting.Indented
             };
 
-            var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(new FileResolver(), new Workspace(), PathHelper.FilePathToFileUrl(bicepPath));
-            var compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping);
+            var fileResolver = new FileResolver();
+            var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(fileResolver, new Workspace(), PathHelper.FilePathToFileUrl(bicepPath));
+            var compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping, fileResolver);
 
             var success = LogDiagnosticsAndCheckSuccess(logger, compilation);
             if (success)
@@ -213,8 +215,9 @@ namespace Bicep.Cli
                     File.WriteAllText(fileUri.LocalPath, bicepOutput);
                 }
 
-                var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(new FileResolver(), new Workspace(), bicepUri);
-                var compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping);
+                var fileResolver = new FileResolver();
+                var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(fileResolver, new Workspace(), bicepUri);
+                var compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping, fileResolver);
 
                 return LogDiagnosticsAndCheckSuccess(diagnosticLogger, compilation) ? 0 : 1;
             }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System;
@@ -19,6 +19,7 @@ namespace Bicep.Core.Semantics
             this.ReturnType = LanguageConstants.Any;
             this.FixedParameters = ImmutableArray.CreateBuilder<FixedFunctionParameter>();
             this.ReturnTypeBuilder = args => LanguageConstants.Any;
+            this.ReturnTypeBuilderAdvanced = null;
             this.VariableParameter = null;
         }
 
@@ -33,6 +34,8 @@ namespace Bicep.Core.Semantics
         protected VariableFunctionParameter? VariableParameter { get; private set; }
 
         protected FunctionOverload.ReturnTypeBuilderDelegate ReturnTypeBuilder { get; private set; }
+
+        protected FunctionOverload.AdvancedReturnTypeBuilderDelegate? ReturnTypeBuilderAdvanced { get; private set; }
 
         protected FunctionFlags Flags { get; private set; }
 
@@ -50,6 +53,7 @@ namespace Bicep.Core.Semantics
                 this.ReturnType,
                 this.FixedParameters.ToImmutable(),
                 this.VariableParameter,
+                this.ReturnTypeBuilderAdvanced,
                 this.Flags);
 
         public FunctionOverloadBuilder WithDescription(string description)
@@ -90,6 +94,14 @@ namespace Bicep.Core.Semantics
         public FunctionOverloadBuilder WithVariableParameter(string namePrefix, TypeSymbol type, int minimumCount, string description)
         {
             this.VariableParameter = new VariableFunctionParameter(namePrefix, description, type, minimumCount);
+            return this;
+        }
+
+        public FunctionOverloadBuilder WithAdvancedReturnType(TypeSymbol signatureType, FunctionOverload.AdvancedReturnTypeBuilderDelegate typeBuilder)
+        {
+            this.ReturnType = signatureType;
+            this.ReturnTypeBuilder = _ => signatureType;
+            this.ReturnTypeBuilderAdvanced = typeBuilder;
             return this;
         }
 

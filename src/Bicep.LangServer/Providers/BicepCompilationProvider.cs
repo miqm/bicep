@@ -28,7 +28,7 @@ namespace Bicep.LanguageServer.Providers
         public CompilationContext Create(IReadOnlyWorkspace workspace, DocumentUri documentUri)
         {
             var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(fileResolver, workspace, documentUri.ToUri());
-            var compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping);
+            var compilation = new Compilation(resourceTypeProvider, syntaxTreeGrouping, fileResolver);
 
             return new CompilationContext(compilation);
         }

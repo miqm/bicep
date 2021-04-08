@@ -679,7 +679,7 @@ namespace Bicep.Decompiler
                 return createFakeModulePath(templateLink);
             }
             
-            var nestedUri = fileResolver.TryResolveModulePath(fileUri, nestedRelativePath);
+            var nestedUri = fileResolver.TryResolveFilePath(fileUri, nestedRelativePath);
             if (nestedUri == null || !fileResolver.TryRead(nestedUri, out _, out _))
             {
                 // return the original expression so that the author can fix it up rather than failing
@@ -996,7 +996,7 @@ namespace Bicep.Decompiler
                 }
             
                 var filePath = $"./nested_{identifier}.bicep";
-                var nestedModuleUri = fileResolver.TryResolveModulePath(fileUri, filePath) ?? throw new ConversionFailedException($"Unable to module uri for {typeString} {nameString}", nestedTemplate);
+                var nestedModuleUri = fileResolver.TryResolveFilePath(fileUri, filePath) ?? throw new ConversionFailedException($"Unable to module uri for {typeString} {nameString}", nestedTemplate);
                 if (workspace.TryGetSyntaxTree(nestedModuleUri, out _))
                 {
                     throw new ConversionFailedException($"Unable to generate duplicate module to path ${nestedModuleUri} for {typeString} {nameString}", nestedTemplate);

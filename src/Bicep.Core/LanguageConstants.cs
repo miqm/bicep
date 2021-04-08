@@ -17,6 +17,7 @@ namespace Bicep.Core
 
         public const int MaxParameterCount = 256;
         public const int MaxIdentifierLength = 255;
+        public const int MaxLiteralCharacterLimit = 131072;
 
         public const string ErrorName = "<error>";
         public const string MissingName = "<missing>";

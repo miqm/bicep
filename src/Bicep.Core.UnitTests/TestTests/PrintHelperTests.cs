@@ -5,6 +5,7 @@ using Bicep.Core.Parsing;
 using Bicep.Core.UnitTests.Utils;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Bicep.Core.FileSystem;
 
 namespace Bicep.Core.UnitTests.TestTests
 {
@@ -14,6 +15,7 @@ namespace Bicep.Core.UnitTests.TestTests
         [TestMethod]
         public void PrintHelper_should_add_annotations()
         {
+            var fileResolver = new FileResolver();
             var syntaxTree = SyntaxTreeGroupingFactory.CreateFromText(@"
 resource domainServices 'Microsoft.MadeUpRp/madeUpType@2017-06-01' = {
   name: 'hello'
@@ -22,7 +24,7 @@ resource domainServices 'Microsoft.MadeUpRp/madeUpType@2017-06-01' = {
     someMadeUpProp: 'boo'
   }
 }
-").EntryPoint;
+", fileResolver).EntryPoint;
 
             var output = PrintHelper.PrintWithAnnotations(syntaxTree, new [] {
                 new PrintHelper.Annotation(new TextSpan(26, 18), "what is this!?"),
@@ -81,7 +83,7 @@ don't
 care
 about
 '''
-").EntryPoint;
+", new FileResolver()).EntryPoint;
 
             var output = PrintHelper.PrintWithAnnotations(syntaxTree, new [] {
                 new PrintHelper.Annotation(new TextSpan(108, 4), "here's your cursor!"),

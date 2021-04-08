@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
@@ -24,6 +24,7 @@ namespace Bicep.Core.Semantics
                 this.ReturnType,
                 this.FixedParameters.ToImmutable(),
                 this.VariableParameter,
+                this.ReturnTypeBuilderAdvanced,
                 this.Flags);
         }
     }
