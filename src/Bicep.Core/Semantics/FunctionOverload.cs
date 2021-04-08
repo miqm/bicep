@@ -4,48 +4,51 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Azure.Deployments.Expression.Expressions;
 using Bicep.Core.Diagnostics;
+using Bicep.Core.Emit;
 using Bicep.Core.Extensions;
 using Bicep.Core.Syntax;
 using Bicep.Core.TypeSystem;
+using Newtonsoft.Json;
 
 namespace Bicep.Core.Semantics
 {
     public class FunctionOverload
     {
         public delegate TypeSymbol ReturnTypeBuilderDelegate(IEnumerable<FunctionArgumentSyntax> arguments);
-        public delegate TypeSymbol AdvancedReturnTypeBuilderDelegate(Context context);
+        public delegate TypeSymbol AdvancedReturnTypeBuilderDelegate(AdvancedReturnTypeBuilderContext context);
+        public delegate bool ExpressionEmitterDelegate(JsonTextWriter writer, EmitterContext emitterContext, FunctionCallSyntax functionCallSyntax, FunctionSymbol functionSymbol, out SyntaxBase? expression, out LanguageExpression? languageExpression);
 
-        public class Context
+        public class AdvancedReturnTypeBuilderContext
         {
             public IBinder Binder { get; }
             public IDiagnosticWriter Diagnostics { get; }
             public (FunctionArgumentSyntax syntax, TypeSymbol)[] Arguments { get; }
-            public IDictionary<string, object> Data { get; }
 
-            public Context(IBinder binder, IDiagnosticWriter diagnostic, (FunctionArgumentSyntax syntax, TypeSymbol)[] arguments)
+            public AdvancedReturnTypeBuilderContext(IBinder binder, IDiagnosticWriter diagnostic, (FunctionArgumentSyntax syntax, TypeSymbol)[] arguments)
             {
                 Binder = binder;
                 Diagnostics = diagnostic;
                 Arguments = arguments;
-                Data = new Dictionary<string, object>();
             }
         }
 
-        public FunctionOverload(string name, string description, ReturnTypeBuilderDelegate returnTypeBuilder, TypeSymbol returnType, IEnumerable<FixedFunctionParameter> fixedParameters, VariableFunctionParameter? variableParameter, AdvancedReturnTypeBuilderDelegate? advancedReturnTypeBuilder, FunctionFlags flags = FunctionFlags.Default)
+        public FunctionOverload(string name, string description, ReturnTypeBuilderDelegate returnTypeBuilder, TypeSymbol returnType, IEnumerable<FixedFunctionParameter> fixedParameters, VariableFunctionParameter? variableParameter, AdvancedReturnTypeBuilderDelegate? advancedReturnTypeBuilder, ExpressionEmitterDelegate? expressionEmitter, FunctionFlags flags = FunctionFlags.Default)
         {
-            this.Name = name;
-            this.Description = description;
-            this.ReturnTypeBuilder = returnTypeBuilder;
-            this.ReturnTypeBuilderAdvanced = advancedReturnTypeBuilder;
-            this.FixedParameters = fixedParameters.ToImmutableArray();
-            this.VariableParameter = variableParameter;
-            this.Flags = flags;
+            Name = name;
+            Description = description;
+            ReturnTypeBuilder = returnTypeBuilder;
+            ReturnTypeBuilderAdvanced = advancedReturnTypeBuilder;
+            ExpressionEmitter = expressionEmitter;
+            FixedParameters = fixedParameters.ToImmutableArray();
+            VariableParameter = variableParameter;
+            Flags = flags;
 
-            this.MinimumArgumentCount = this.FixedParameters.Count(fp => fp.Required) + (this.VariableParameter?.MinimumCount ?? 0);
-            this.MaximumArgumentCount = this.VariableParameter == null ? this.FixedParameters.Length : (int?)null;
+            MinimumArgumentCount = FixedParameters.Count(fp => fp.Required) + (VariableParameter?.MinimumCount ?? 0);
+            MaximumArgumentCount = VariableParameter == null ? FixedParameters.Length : (int?)null;
             
-            this.TypeSignature = $"({string.Join(", ", this.ParameterTypeSignatures)}): {returnType}";
+            TypeSignature = $"({string.Join(", ", ParameterTypeSignatures)}): {returnType}";
         }
 
         public string Name { get; }
@@ -63,6 +66,8 @@ namespace Bicep.Core.Semantics
         public ReturnTypeBuilderDelegate ReturnTypeBuilder { get; }
 
         public AdvancedReturnTypeBuilderDelegate? ReturnTypeBuilderAdvanced { get; }
+
+        public ExpressionEmitterDelegate? ExpressionEmitter { get; }
 
         public FunctionFlags Flags { get; }
 

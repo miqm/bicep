@@ -30,5 +30,7 @@ namespace Bicep.Core.Semantics
         public ImmutableArray<FunctionOverload> Overloads { get; }
 
         public FunctionFlags FunctionFlags { get; }
+
+        public FunctionOverload? MatchedOverload { get; internal set; }
     }
 }

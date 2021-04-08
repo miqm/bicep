@@ -3,13 +3,15 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
 using System.Text;
+using Azure.Deployments.Expression.Expressions;
 using Bicep.Core.Diagnostics;
+using Bicep.Core.Emit;
 using Bicep.Core.Extensions;
 using Bicep.Core.Syntax;
 using Bicep.Core.TypeSystem;
+using Newtonsoft.Json;
 
 namespace Bicep.Core.Semantics.Namespaces
 {
@@ -21,6 +23,17 @@ namespace Bicep.Core.Semantics.Namespaces
                 .WithReturnType(LanguageConstants.Any)
                 .WithDescription("Converts the specified value to the `any` type.")
                 .WithRequiredParameter("value", LanguageConstants.Any, "The value to convert to `any` type")
+                .WithExpressionEmitter((JsonTextWriter writer, EmitterContext emitterContext, FunctionCallSyntax functionCallSyntax, FunctionSymbol functionSymbol, out SyntaxBase? nextExpression, out LanguageExpression? languageExpression) =>{
+
+                    // the outermost function in the current syntax node is the "any" function
+                    // we should emit its argument directly
+                    // otherwise, they'd get wrapped in a json() template function call in the converted expression
+
+                    // we have checks for function parameter count mismatch, which should prevent an exception from being thrown
+                    nextExpression = functionCallSyntax.Arguments.Single().Expression;
+                    languageExpression = null;
+                    return true;
+                })
                 .Build(),
 
             new FunctionOverloadBuilder("concat")
@@ -397,61 +410,106 @@ namespace Bicep.Core.Semantics.Namespaces
                 .WithDescription("Load content of specified file into a string. Content loading occurs during compilation, not in runtime. Maximum allowed content size is 131,072 characters (including line endings).")
                 .WithRequiredParameter("filePath", LanguageConstants.String, "File's path which content will be loaded")
                 .WithOptionalParameter("encoding", LanguageConstants.String, "File encoding. If not provided, Bicep will try to automatically detect the encoding of a file based on the presence of byte order marks.")
-                .WithAdvancedReturnType(LanguageConstants.String, ctxt => {
-                    if (ctxt.Arguments[0].syntax.Expression is not StringSyntax filePathSyntax)
-                    {
-                        return LanguageConstants.String;
-                    }
-
-                    if (filePathSyntax.IsInterpolated())
-                    {
-                        ctxt.Diagnostics.Write(DiagnosticBuilder.ForPosition(ctxt.Arguments[0].syntax).CompileTimeConstantRequired());
-                        return LanguageConstants.String;
-                    }
-
-                    var filePath = filePathSyntax.TryGetLiteralValue() ?? string.Empty;
-                    if (!SyntaxTreeGroupingBuilder.ValidateFilePath(filePath, out var validateFilePathFailureBuilder))
-                    {
-                        ctxt.Diagnostics.Write(validateFilePathFailureBuilder.Invoke(DiagnosticBuilder.ForPosition(ctxt.Arguments[0].syntax)));
-                        return LanguageConstants.String;
-                    }
-
-                    var fileUri = ctxt.Binder.FileResolver.TryResolveFilePath(ctxt.Binder.FileUri, filePath);
-                    if (fileUri is null)
-                    {
-                        ctxt.Diagnostics.Write(DiagnosticBuilder.ForPosition(ctxt.Arguments[0].syntax).FilePathCouldNotBeResolved(filePath, ctxt.Binder.FileUri.LocalPath));
-                        return LanguageConstants.String;
-                    }
-
-                    if (!fileUri.IsFile)
-                    {
-                        ctxt.Diagnostics.Write(DiagnosticBuilder.ForPosition(ctxt.Arguments[0].syntax).UnableToLoadNonFileUri(fileUri));
-                        return LanguageConstants.String;
-                    }
-
-                    var fileEncoding = Encoding.Default;
-                    if (ctxt.Arguments.Length > 1)
-                    {
-                        fileEncoding = Encoding.UTF8; //todo read encoding
-                    }
-
-                    if (!ctxt.Binder.FileResolver.TryRead(fileUri, out var fileContent, out var fileReadFailureBuilder, fileEncoding, LanguageConstants.MaxLiteralCharacterLimit))
-                    {
-                        ctxt.Diagnostics.Write(fileReadFailureBuilder.Invoke(DiagnosticBuilder.ForPosition(ctxt.Arguments[0].syntax)));
-                        return LanguageConstants.String;
-                    }
-
-                    return new StringLiteralType(fileContent);
-
-                })
+                .WithAdvancedReturnType(LanguageConstants.String, LoadTextContentTypeBuilder)
+                .WithExpressionEmitter(StringLiteralFunctionReturnTypeEmitter)
                 .Build(),
 
             new FunctionOverloadBuilder("loadContentAsBase64")
-                .WithReturnType(LanguageConstants.String)
-                .WithDescription("Loads specified file as base64 string. File loading occurs during compilation, not in runtime. Maximum allowed size is 96Kb.")
+                .WithDescription($"Loads specified file as base64 string. File loading occurs during compilation, not in runtime. Maximum allowed size is {LanguageConstants.MaxLiteralCharacterLimit / 4 * 3 / 1024} Kb.")
                 .WithRequiredParameter("filePath", LanguageConstants.String, "File path which will be loaded")
+                .WithAdvancedReturnType(LanguageConstants.String, LoadContentAsBase64TypeBuilder)
+                .WithExpressionEmitter(StringLiteralFunctionReturnTypeEmitter)
                 .Build()
         }.ToImmutableArray();
+
+        private static Uri? GetFileUriWithDiagnostics(FunctionOverload.AdvancedReturnTypeBuilderContext context)
+        {
+            if (context.Arguments[0].syntax.Expression is not StringSyntax filePathSyntax)
+            {
+                throw new InvalidOperationException($"Expecting function to accept {nameof(StringSyntax)} as first parameter, but {context.Arguments[0].syntax.Expression.GetType().Name} received.");
+            }
+
+            if (filePathSyntax.IsInterpolated())
+            {
+                context.Diagnostics.Write(DiagnosticBuilder.ForPosition(context.Arguments[0].syntax).CompileTimeConstantRequired());
+                return null;
+            }
+
+            var filePath = filePathSyntax.TryGetLiteralValue() ?? string.Empty;
+            if (!SyntaxTreeGroupingBuilder.ValidateFilePath(filePath, out var validateFilePathFailureBuilder))
+            {
+                context.Diagnostics.Write(validateFilePathFailureBuilder.Invoke(DiagnosticBuilder.ForPosition(context.Arguments[0].syntax)));
+                return null;
+            }
+
+            var fileUri = context.Binder.FileResolver.TryResolveFilePath(context.Binder.FileUri, filePath);
+            if (fileUri is null)
+            {
+                context.Diagnostics.Write(DiagnosticBuilder.ForPosition(context.Arguments[0].syntax).FilePathCouldNotBeResolved(filePath, context.Binder.FileUri.LocalPath));
+                return null;
+            }
+
+            if (!fileUri.IsFile)
+            {
+                context.Diagnostics.Write(DiagnosticBuilder.ForPosition(context.Arguments[0].syntax).UnableToLoadNonFileUri(fileUri));
+                return null;
+            }
+            return fileUri;
+        }
+
+        private static TypeSymbol LoadTextContentTypeBuilder(FunctionOverload.AdvancedReturnTypeBuilderContext context)
+        {
+            var fileUri = GetFileUriWithDiagnostics(context);
+            if (fileUri is null)
+            {
+                return LanguageConstants.String;
+            }
+
+            var fileEncoding = Encoding.Default;
+            if (context.Arguments.Length > 1)
+            {
+                fileEncoding = Encoding.UTF8; //todo read encoding
+            }
+
+            if (!context.Binder.FileResolver.TryRead(fileUri, out var fileContent, out var fileReadFailureBuilder, fileEncoding, LanguageConstants.MaxLiteralCharacterLimit))
+            {
+                context.Diagnostics.Write(fileReadFailureBuilder.Invoke(DiagnosticBuilder.ForPosition(context.Arguments[0].syntax)));
+                return LanguageConstants.String;
+            }
+
+            return new StringLiteralType(fileContent);
+        }
+
+        private static TypeSymbol LoadContentAsBase64TypeBuilder(FunctionOverload.AdvancedReturnTypeBuilderContext context)
+        {
+            var fileUri = GetFileUriWithDiagnostics(context);
+            if (fileUri is null)
+            {
+                return LanguageConstants.String;
+            }
+
+            if (!context.Binder.FileResolver.TryReadAsBase64(fileUri, out var fileContent, out var fileReadFailureBuilder, LanguageConstants.MaxLiteralCharacterLimit))
+            {
+                context.Diagnostics.Write(fileReadFailureBuilder.Invoke(DiagnosticBuilder.ForPosition(context.Arguments[0].syntax)));
+                return LanguageConstants.String;
+            }
+
+            return new StringLiteralType(fileContent);
+        }
+
+        private static bool StringLiteralFunctionReturnTypeEmitter(JsonTextWriter writer, EmitterContext emitterContext, FunctionCallSyntax functionCallSyntax, FunctionSymbol functionSymbol, out SyntaxBase? nextExpression, out LanguageExpression languageExpression)
+        {
+            var returnedType = emitterContext.SemanticModel.TypeManager.GetTypeInfo(functionCallSyntax);
+
+            if (returnedType is not StringLiteralType stringLiteral)
+            {
+                throw new InvalidOperationException($"Expecting function to return {nameof(StringLiteralType)}, but {returnedType.GetType().Name} received.");
+            }
+
+            languageExpression = new JTokenExpression(stringLiteral.RawStringValue);
+            nextExpression = null;
+            return true;
+        }
 
         // TODO: Add copyIndex here when we support loops.
         private static readonly ImmutableArray<BannedFunction> BannedFunctions = new[]

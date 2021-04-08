@@ -17,15 +17,16 @@ namespace Bicep.Core.Semantics
         public override FunctionOverload BuildInternal()
         {
             return new FunctionWildcardOverload(
-                this.Name,
-                this.Description,
-                this.WildcardRegex,
-                this.ReturnTypeBuilder,
-                this.ReturnType,
-                this.FixedParameters.ToImmutable(),
-                this.VariableParameter,
-                this.ReturnTypeBuilderAdvanced,
-                this.Flags);
+                Name,
+                Description,
+                WildcardRegex,
+                ReturnTypeBuilder,
+                ReturnType,
+                FixedParameters.ToImmutable(),
+                VariableParameter,
+                ReturnTypeBuilderAdvanced,
+                ExpressionEmitter,
+                Flags);
         }
     }
 }

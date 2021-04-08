@@ -15,7 +15,7 @@ namespace Bicep.Core.Emit
 {
     public class ExpressionEmitter
     {
-        private static readonly ExpressionSerializer ExpressionSerializer = new ExpressionSerializer(new ExpressionSerializerSettings
+        private static readonly ExpressionSerializer ExpressionSerializer = new(new ExpressionSerializerSettings
         {
             IncludeOuterSquareBrackets = true,
 
@@ -82,7 +82,7 @@ namespace Bicep.Core.Emit
                 case ResourceAccessSyntax _:
                 case VariableAccessSyntax _:
                     EmitLanguageExpression(syntax);
-                    
+
                     break;
 
                 default:
@@ -103,7 +103,7 @@ namespace Bicep.Core.Emit
         public void EmitResourceIdReference(ResourceSymbol resourceSymbol, SyntaxBase? indexExpression, SyntaxBase newContext)
         {
             var converterForContext = this.converter.CreateConverterForIndexReplacement(ExpressionConverter.GetResourceNameSyntax(resourceSymbol), indexExpression, newContext);
-            
+
             var resourceIdExpression = converterForContext.GetFullyQualifiedResourceId(resourceSymbol);
             var serialized = ExpressionSerializer.SerializeExpression(resourceIdExpression);
 
@@ -113,7 +113,7 @@ namespace Bicep.Core.Emit
         public void EmitResourceIdReference(ModuleSymbol moduleSymbol, SyntaxBase? indexExpression, SyntaxBase newContext)
         {
             var converterForContext = this.converter.CreateConverterForIndexReplacement(ExpressionConverter.GetModuleNameSyntax(moduleSymbol), indexExpression, newContext);
-            
+
             var resourceIdExpression = converterForContext.GetFullyQualifiedResourceId(moduleSymbol);
             var serialized = ExpressionSerializer.SerializeExpression(resourceIdExpression);
 
@@ -137,39 +137,55 @@ namespace Bicep.Core.Emit
                 return;
             }
 
-            if (syntax is FunctionCallSyntax functionCall && 
-                symbol is FunctionSymbol functionSymbol && 
-                string.Equals(functionSymbol.Name, "any", LanguageConstants.IdentifierComparison))
+            if (syntax is FunctionCallSyntax functionCall &&
+                symbol is FunctionSymbol functionSymbol)
             {
-                // the outermost function in the current syntax node is the "any" function
-                // we should emit its argument directly
-                // otherwise, they'd get wrapped in a json() template function call in the converted expression
-
-                // we have checks for function parameter count mismatch, which should prevent an exception from being thrown
-                EmitExpression(functionCall.Arguments.Single().Expression);
-                return;
+                if (functionSymbol.MatchedOverload?.ExpressionEmitter is not null)
+                {
+                    if (functionSymbol.MatchedOverload.ExpressionEmitter(writer, context, functionCall, functionSymbol, out var nextExpression, out var languageExpression))
+                    {
+                        if (nextExpression is not null && languageExpression is not null)
+                        {
+                            throw new InvalidOperationException("Function cannot return both nextExpression and languageExpression");
+                        }
+                        if (nextExpression is not null)
+                        {
+                            EmitExpression(nextExpression);
+                        }
+                        else if (languageExpression is not null)
+                        {
+                            EmitLanguageExpression(languageExpression);
+                        }
+                        return;
+                    }
+                }
             }
 
             LanguageExpression converted = converter.ConvertExpression(syntax);
 
-            if (converted is JTokenExpression valueExpression && valueExpression.Value.Type == JTokenType.Integer)
+            EmitLanguageExpression(converted);
+
+            void EmitLanguageExpression(LanguageExpression converted)
             {
-                // the converted expression is an integer literal
-                JToken value = valueExpression.Value;
+                if (converted is JTokenExpression valueExpression && valueExpression.Value.Type == JTokenType.Integer)
+                {
+                    // the converted expression is an integer literal
+                    JToken value = valueExpression.Value;
 
-                // for integer literals the expression will look like "[42]" or "[-12]"
-                // while it's still a valid template expression that works in ARM, it looks weird
-                // and is also not recognized by the template language service in VS code
-                // let's serialize it as a proper integer instead
-                writer.WriteValue(value);
+                    // for integer literals the expression will look like "[42]" or "[-12]"
+                    // while it's still a valid template expression that works in ARM, it looks weird
+                    // and is also not recognized by the template language service in VS code
+                    // let's serialize it as a proper integer instead
+                    writer.WriteValue(value);
 
-                return;
+                    return;
+                }
+
+                // strings literals and other expressions must be processed with the serializer to ensure correct conversion and escaping
+                var serialized = ExpressionSerializer.SerializeExpression(converted);
+
+                writer.WriteValue(serialized);
             }
-
-            // strings literals and other expressions must be processed with the serializer to ensure correct conversion and escaping
-            var serialized = ExpressionSerializer.SerializeExpression(converted);
-
-            writer.WriteValue(serialized);
         }
 
         public void EmitCopyObject(string? name, ForSyntax syntax, SyntaxBase? input, string? copyIndexOverride = null, long? batchSize = null)
@@ -207,7 +223,7 @@ namespace Bicep.Core.Emit
                 syntax.Expression,
                 arrayExpression => new FunctionExpression("length", new[] { arrayExpression }, Array.Empty<LanguageExpression>()));
 
-            if(batchSize.HasValue)
+            if (batchSize.HasValue)
             {
                 this.EmitProperty("mode", "serial");
                 this.EmitProperty("batchSize", () => writer.WriteValue(batchSize.Value));
@@ -230,7 +246,7 @@ namespace Bicep.Core.Emit
                 {
                     this.EmitPropertyWithTransform("input", input, expression =>
                     {
-                        if(!CanEmitAsInputDirectly(input))
+                        if (!CanEmitAsInputDirectly(input))
                         {
                             expression = ExpressionConverter.ToFunctionExpression(expression);
                         }
@@ -249,14 +265,14 @@ namespace Bicep.Core.Emit
                                 {
                                     // it's an invocation of the copyIndex function with 1 argument with a literal value
                                     // replace the argument with the correct value
-                                    function.Parameters = new LanguageExpression[] {new JTokenExpression("value")};
+                                    function.Parameters = new LanguageExpression[] { new JTokenExpression("value") };
                                 }
                             }
                         };
 
                         // mutate the expression
                         expression.Accept(visitor);
-                        
+
                         return expression;
                     });
                 }
@@ -327,7 +343,7 @@ namespace Bicep.Core.Emit
                 var converted = converter.ConvertExpression(value);
                 var transformed = convertedValueTransform(converted);
                 var serialized = ExpressionSerializer.SerializeExpression(transformed);
-                
+
                 this.writer.WriteValue(serialized);
             });
 

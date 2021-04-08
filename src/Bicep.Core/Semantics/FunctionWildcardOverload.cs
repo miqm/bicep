@@ -17,8 +17,9 @@ namespace Bicep.Core.Semantics
             IEnumerable<FixedFunctionParameter> fixedArgumentTypes,
             VariableFunctionParameter? variableArgumentType,
             AdvancedReturnTypeBuilderDelegate?  advancedReturnTypeBuilder,
+            ExpressionEmitterDelegate? expressionEmitterDelegate,
             FunctionFlags flags = FunctionFlags.Default)
-            : base(name, description, returnTypeBuilder, returnType, fixedArgumentTypes, variableArgumentType, advancedReturnTypeBuilder, flags)
+            : base(name, description, returnTypeBuilder, returnType, fixedArgumentTypes, variableArgumentType, advancedReturnTypeBuilder, expressionEmitterDelegate, flags)
         {
             WildcardRegex = wildcardRegex;
         }

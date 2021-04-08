@@ -37,6 +37,8 @@ namespace Bicep.Core.Semantics
 
         protected FunctionOverload.AdvancedReturnTypeBuilderDelegate? ReturnTypeBuilderAdvanced { get; private set; }
 
+        protected FunctionOverload.ExpressionEmitterDelegate? ExpressionEmitter { get; private set; }
+
         protected FunctionFlags Flags { get; private set; }
 
         public FunctionOverload Build()
@@ -54,6 +56,7 @@ namespace Bicep.Core.Semantics
                 this.FixedParameters.ToImmutable(),
                 this.VariableParameter,
                 this.ReturnTypeBuilderAdvanced,
+                this.ExpressionEmitter,
                 this.Flags);
 
         public FunctionOverloadBuilder WithDescription(string description)
@@ -99,9 +102,15 @@ namespace Bicep.Core.Semantics
 
         public FunctionOverloadBuilder WithAdvancedReturnType(TypeSymbol signatureType, FunctionOverload.AdvancedReturnTypeBuilderDelegate typeBuilder)
         {
-            this.ReturnType = signatureType;
-            this.ReturnTypeBuilder = _ => signatureType;
-            this.ReturnTypeBuilderAdvanced = typeBuilder;
+            ReturnType = signatureType;
+            ReturnTypeBuilder = _ => signatureType;
+            ReturnTypeBuilderAdvanced = typeBuilder;
+            return this;
+        }
+
+        public FunctionOverloadBuilder WithExpressionEmitter(FunctionOverload.ExpressionEmitterDelegate expressionEmitter)
+        {
+            ExpressionEmitter = expressionEmitter;
             return this;
         }
 

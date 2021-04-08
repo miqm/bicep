@@ -886,7 +886,7 @@ namespace Bicep.Core.TypeSystem
                         return ErrorType.Create(errors.Concat(errorSymbol.GetDiagnostics()));
 
                     case FunctionSymbol function:
-                        return this.GetFunctionSymbolType(function, syntax.OpenParen, syntax.CloseParen, syntax.Arguments, errors, diagnostics);
+                        return GetFunctionSymbolType(function, syntax.OpenParen, syntax.CloseParen, syntax.Arguments, errors, diagnostics);
 
                     default:
                         return ErrorType.Create(errors.Append(DiagnosticBuilder.ForPosition(syntax.Name.Span).SymbolicNameIsNotAFunction(syntax.Name.IdentifierName)));
@@ -1115,12 +1115,14 @@ namespace Bicep.Core.TypeSystem
 
             if (matches.Count == 1)
             {
+
                 // we have an exact match or a single ambiguous match
                 // return its type
                 FunctionOverload functionOverload = matches.Single();
+                function.MatchedOverload = functionOverload;
                 if (functionOverload.ReturnTypeBuilderAdvanced is not null)
                 {
-                    var context = new FunctionOverload.Context(binder, diagnosticWriter, argumentSyntaxes.Select((syntax, i) => (syntax, argumentTypes[i])).ToArray());
+                    var context = new FunctionOverload.AdvancedReturnTypeBuilderContext(binder, diagnosticWriter, argumentSyntaxes.Select((syntax, i) => (syntax, argumentTypes[i])).ToArray());
                     return functionOverload.ReturnTypeBuilderAdvanced(context);
                 }
 

@@ -63,12 +63,12 @@ namespace Bicep.Core.FileSystem
                 }
                 using var fileStream = File.OpenRead(fileUri.LocalPath);
                 using var sr = new StreamReader(fileStream, fileEncoding, true);
-
-                Span<char> buffer = stackalloc char[10240];
+                Span<char> buffer = stackalloc char[LanguageConstants.MaxLiteralCharacterLimit + 1];
                 var sb = new StringBuilder();
-                while (sr.ReadBlock(buffer) > 0)
+                while (!sr.EndOfStream)
                 {
-                    sb.Append(new string(buffer));
+                    var i = sr.ReadBlock(buffer);
+                    sb.Append(new string(buffer.Slice(0, i)));
                     if (maxCharacters > 0 && sb.Length > maxCharacters)
                     {
                         failureBuilder = x => x.FileExceedsMaximumSize(fileUri.LocalPath, maxCharacters, "characters");
@@ -77,7 +77,6 @@ namespace Bicep.Core.FileSystem
                     }
                 }
                 fileContents = sb.ToString();
-
                 return true;
             }
             catch (Exception exception)
@@ -122,13 +121,17 @@ namespace Bicep.Core.FileSystem
                 }
 
                 using var fileStream = File.OpenRead(fileUri.LocalPath);
-                Span<byte> buffer = stackalloc byte[10240];
+
+                Span<byte> buffer = stackalloc byte[102400];
                 var sb = new StringBuilder();
-                while (fileStream.Read(buffer) > 0)
+                using var memoryStream = new MemoryStream(102400);
+                var i = 0;
+                while ((i = fileStream.Read(buffer)) > 0)
                 {
-                    sb.Append(new string(Convert.ToBase64String(buffer, Base64FormattingOptions.None)));
+                    memoryStream.Write(buffer.Slice(0, i));
                 }
-                fileBase64 = sb.ToString();
+
+                fileBase64 = new string(Convert.ToBase64String(memoryStream.ToArray(), Base64FormattingOptions.None));
 
                 return true;
             }
