@@ -1,19 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 using System.Collections.Generic;
-using System.Linq;
 using Bicep.Core.Diagnostics;
-using Bicep.Core.Extensions;
-using Bicep.Core.FileSystem;
-using Bicep.Core.Resources;
 using Bicep.Core.Semantics;
-using Bicep.Core.Syntax;
 using Bicep.Core.TypeSystem;
+using Bicep.Core.UnitTests;
 using Bicep.Core.UnitTests.Assertions;
 using Bicep.Core.UnitTests.Utils;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 
 namespace Bicep.Core.IntegrationTests
 {
@@ -24,8 +19,7 @@ namespace Bicep.Core.IntegrationTests
         {
             var typeProvider = ResourceTypeProviderHelper.CreateMockTypeProvider(definedTypes);
 
-            var fileResolver = new FileResolver();
-            var compilation = new Compilation(typeProvider, SyntaxTreeGroupingFactory.CreateFromText(programText, fileResolver), fileResolver);
+            var compilation = new Compilation(typeProvider, SyntaxTreeGroupingFactory.CreateFromText(programText, BicepTestConstants.FileResolver), BicepTestConstants.FileResolver);
             return compilation.GetEntrypointSemanticModel();
         }
 

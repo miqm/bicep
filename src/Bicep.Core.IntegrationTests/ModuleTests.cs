@@ -73,8 +73,7 @@ output outputb string = '${inputa}-${inputb}'
 ",
             };
 
-            var fileResolver = new FileResolver();
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateForFiles(files, mainUri, fileResolver), fileResolver);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateForFiles(files, mainUri, BicepTestConstants.FileResolver), BicepTestConstants.FileResolver);
 
             var (success, diagnosticsByFile) = GetSuccessAndDiagnosticsByFile(compilation);
             diagnosticsByFile.Values.SelectMany(x => x).Should().BeEmpty();
@@ -103,8 +102,7 @@ module mainRecursive 'main.bicep' = {
 ",
             };
 
-            var fileResolver = new FileResolver();
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateForFiles(files, mainUri, fileResolver), fileResolver);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateForFiles(files, mainUri, BicepTestConstants.FileResolver), BicepTestConstants.FileResolver);
 
             var (success, diagnosticsByFile) = GetSuccessAndDiagnosticsByFile(compilation);
             diagnosticsByFile[mainUri].Should().HaveDiagnostics(new[] {
@@ -158,8 +156,7 @@ module main 'main.bicep' = {
 ",
             };
 
-            var fileResolver = new FileResolver();
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateForFiles(files, mainUri, fileResolver), fileResolver);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateForFiles(files, mainUri, BicepTestConstants.FileResolver), BicepTestConstants.FileResolver);
 
             var (success, diagnosticsByFile) = GetSuccessAndDiagnosticsByFile(compilation);
             diagnosticsByFile[mainUri].Should().HaveDiagnostics(new[] {
@@ -294,8 +291,7 @@ output outputc2 int = inputb + 1
 "
             };
 
-            var fileResolver = new FileResolver();
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateForFiles(files, mainUri, fileResolver), fileResolver);
+            var compilation = new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateForFiles(files, mainUri, BicepTestConstants.FileResolver), BicepTestConstants.FileResolver);
 
             var (success, diagnosticsByFile) = GetSuccessAndDiagnosticsByFile(compilation);
             diagnosticsByFile.Values.SelectMany(x => x).Should().BeEmpty();
@@ -323,7 +319,7 @@ output outputc2 int = inputb + 1
               {
                 [moduleAUri] = files[moduleAUri]
               }, 
-              moduleAUri, fileResolver), fileResolver), moduleATemplateHash);
+              moduleAUri, BicepTestConstants.FileResolver), BicepTestConstants.FileResolver), moduleATemplateHash);
 
             ModuleTemplateHashValidator(
               new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateForFiles(new Dictionary<Uri, string> 
@@ -331,14 +327,14 @@ output outputc2 int = inputb + 1
                 [moduleBUri] = files[moduleBUri],
                 [moduleCUri] = files[moduleCUri]
               }, 
-              moduleBUri, fileResolver), fileResolver), moduleBTemplateHash);
+              moduleBUri, BicepTestConstants.FileResolver), BicepTestConstants.FileResolver), moduleBTemplateHash);
 
             ModuleTemplateHashValidator(
               new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateForFiles(new Dictionary<Uri, string> 
               {
                 [moduleCUri] = files[moduleCUri]
               }, 
-              moduleCUri, fileResolver), fileResolver), moduleCTemplateHash);
+              moduleCUri, BicepTestConstants.FileResolver), BicepTestConstants.FileResolver), moduleCTemplateHash);
         }
 
          [TestMethod]

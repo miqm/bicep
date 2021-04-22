@@ -9,6 +9,7 @@ using Bicep.Core.FileSystem;
 using Bicep.Core.Semantics;
 using Bicep.Core.Syntax;
 using Bicep.Core.TypeSystem.Az;
+using Bicep.Core.UnitTests;
 using Bicep.Core.UnitTests.Utils;
 using Bicep.Core.Workspaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -34,10 +35,9 @@ namespace Bicep.Core.Samples
         {
             outputDirectory = dataSet.SaveFilesToTestDirectory(testContext);
             var fileUri = PathHelper.FilePathToFileUrl(Path.Combine(outputDirectory, DataSet.TestFileMain));
-            var fileResolver = new FileResolver();
-            var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(fileResolver, new Workspace(), fileUri);
+            var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(BicepTestConstants.FileResolver, new Workspace(), fileUri);
 
-            return new Compilation(new AzResourceTypeProvider(TypeLoader), syntaxTreeGrouping, fileResolver);
+            return new Compilation(new AzResourceTypeProvider(TypeLoader), syntaxTreeGrouping, BicepTestConstants.FileResolver);
         }
     }
 }

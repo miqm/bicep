@@ -30,11 +30,10 @@ namespace Bicep.Core.UnitTests.Utils
         public static CompilationResult Compile(IResourceTypeProvider resourceTypeProvider, params (string fileName, string fileContents)[] files)
         {
             var (uriDictionary, entryUri) = CreateFileDictionary(files);
+            
+            var syntaxTreeGrouping = SyntaxTreeGroupingFactory.CreateForFiles(uriDictionary, entryUri, BicepTestConstants.FileResolver);
 
-            var fileResolver = new FileResolver();
-            var syntaxTreeGrouping = SyntaxTreeGroupingFactory.CreateForFiles(uriDictionary, entryUri, fileResolver);
-
-            return Compile(new Compilation(resourceTypeProvider, syntaxTreeGrouping, fileResolver));
+            return Compile(new Compilation(resourceTypeProvider, syntaxTreeGrouping, BicepTestConstants.FileResolver));
         }
 
         public static CompilationResult Compile(params (string fileName, string fileContents)[] files)
