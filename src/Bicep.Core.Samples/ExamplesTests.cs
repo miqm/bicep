@@ -109,6 +109,7 @@ namespace Bicep.Core.Samples
 
         [DataTestMethod]
         [DynamicData(nameof(GetExampleData), DynamicDataSourceType.Method, DynamicDataDisplayNameDeclaringType = typeof(ExampleData), DynamicDataDisplayName = nameof(ExampleData.GetDisplayName))]
+        [TestCategory(BaselineHelper.BaselineTestCategory)]
         public void ExampleIsValid(ExampleData example)
         {
             // save all the files in the containing directory to disk so that we can test module resolution
@@ -116,9 +117,9 @@ namespace Bicep.Core.Samples
             var outputDirectory = FileHelper.SaveEmbeddedResourcesWithPathPrefix(TestContext, typeof(ExamplesTests).Assembly, parentStream);
             var bicepFileName = Path.Combine(outputDirectory, Path.GetFileName(example.BicepStreamName));
             var jsonFileName = Path.Combine(outputDirectory, Path.GetFileName(example.JsonStreamName));
-
+            
             var syntaxTreeGrouping = SyntaxTreeGroupingBuilder.Build(BicepTestConstants.FileResolver, new Workspace(), PathHelper.FilePathToFileUrl(bicepFileName));
-            var compilation = new Compilation(new AzResourceTypeProvider(), syntaxTreeGrouping, BicepTestConstants.FileResolver);
+            var compilation = new Compilation(AzResourceTypeProvider.CreateWithAzTypes(), syntaxTreeGrouping, BicepTestConstants.FileResolver);
             var emitter = new TemplateEmitter(compilation.GetEntrypointSemanticModel(), BicepTestConstants.DevAssemblyFileVersion);
 
             foreach (var (syntaxTree, diagnostics) in compilation.GetAllDiagnosticsBySyntaxTree())
@@ -161,6 +162,7 @@ namespace Bicep.Core.Samples
 
         [DataTestMethod]
         [DynamicData(nameof(GetExampleData), DynamicDataSourceType.Method, DynamicDataDisplayNameDeclaringType = typeof(ExampleData), DynamicDataDisplayName = nameof(ExampleData.GetDisplayName))]
+        [TestCategory(BaselineHelper.BaselineTestCategory)]
         public void Example_uses_consistent_formatting(ExampleData example)
         {
             // save all the files in the containing directory to disk so that we can test module resolution

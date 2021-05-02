@@ -19,7 +19,7 @@ namespace Bicep.Core.IntegrationTests.Semantics
         {
             var fileResolver = new FileResolver();
             var program = SyntaxTreeGroupingFactory.CreateFromText(DataSets.Empty.Bicep, fileResolver);
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), program, fileResolver);
+            var compilation = new Compilation(TestTypeHelper.CreateEmptyProvider(), program, fileResolver);
 
             compilation.SyntaxTreeGrouping.Should().BeSameAs(program);
             compilation.GetEntrypointSemanticModel().Should().NotBeNull();

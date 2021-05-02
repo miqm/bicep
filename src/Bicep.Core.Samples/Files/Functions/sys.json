@@ -621,7 +621,7 @@
   },
   {
     "name": "loadContentAsBase64",
-    "description": "Loads specified file as base64 string. File loading occurs during compilation, not in runtime. Maximum allowed size is 96Kb.",
+    "description": "Loads specified file as base64 string. File loading occurs during compilation, not in runtime. Maximum allowed size is 96 Kb.",
     "fixedParameters": [
       {
         "name": "filePath",

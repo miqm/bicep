@@ -18,8 +18,8 @@ namespace Bicep.Core.UnitTests.Semantics
         public void LockedModeShouldBlockAccess()
         {
             const string expectedMessage = "Properties of the symbol context should not be accessed until name binding is completed.";
-            
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), SyntaxTreeGroupingFactory.CreateFromText("", BicepTestConstants.FileResolver), BicepTestConstants.FileResolver);
+
+            var compilation = new Compilation(TestTypeHelper.CreateEmptyProvider(), SyntaxTreeGroupingFactory.CreateFromText("", BicepTestConstants.FileResolver), BicepTestConstants.FileResolver);
             var bindings = new Dictionary<SyntaxBase, Symbol>();
             var cyclesBySymbol = new Dictionary<DeclaredSymbol, ImmutableArray<DeclaredSymbol>>();
             var context = new SymbolContext(compilation, compilation.GetEntrypointSemanticModel());

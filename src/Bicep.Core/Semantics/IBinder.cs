@@ -19,7 +19,6 @@ namespace Bicep.Core.Semantics
 
         IFileResolver FileResolver { get; }
 
-        IEnumerable<SyntaxBase> FindReferences(Symbol symbol);
 
         Symbol? GetSymbolInfo(SyntaxBase syntax);
 

@@ -30,6 +30,7 @@ namespace Bicep.Core.IntegrationTests.Emit
 
         [DataTestMethod]
         [DynamicData(nameof(GetValidDataSets), DynamicDataSourceType.Method, DynamicDataDisplayNameDeclaringType = typeof(DataSet), DynamicDataDisplayName = nameof(DataSet.GetDisplayName))]
+        [TestCategory(BaselineHelper.BaselineTestCategory)]
         public void ValidBicep_TemplateEmiterShouldProduceExpectedTemplate(DataSet dataSet)
         {
             var outputDirectory = dataSet.SaveFilesToTestDirectory(TestContext);
@@ -38,8 +39,8 @@ namespace Bicep.Core.IntegrationTests.Emit
 
             // emitting the template should be successful
             var result = this.EmitTemplate(SyntaxTreeGroupingBuilder.Build(BicepTestConstants.FileResolver, new Workspace(), PathHelper.FilePathToFileUrl(bicepFilePath)), compiledFilePath, BicepTestConstants.DevAssemblyFileVersion);
+            result.Diagnostics.Should().NotHaveErrors();
             result.Status.Should().Be(EmitStatus.Succeeded);
-            result.Diagnostics.Should().BeEmptyOrContainDeprecatedDiagnosticOnly();
 
             var actual = JToken.Parse(File.ReadAllText(compiledFilePath));
 
@@ -58,8 +59,8 @@ namespace Bicep.Core.IntegrationTests.Emit
 
             // emitting the template should be successful
             var result = this.EmitTemplate(syntaxTreeGrouping, compiledFilePath, BicepTestConstants.DevAssemblyFileVersion);
-            result.Status.Should().Be(EmitStatus.Succeeded);
             result.Diagnostics.Should().BeEmpty();
+            result.Status.Should().Be(EmitStatus.Succeeded);
 
             var bytes = File.ReadAllBytes(compiledFilePath);
             // No BOM at the start of the file
@@ -70,6 +71,7 @@ namespace Bicep.Core.IntegrationTests.Emit
 
         [DataTestMethod]
         [DynamicData(nameof(GetValidDataSets), DynamicDataSourceType.Method, DynamicDataDisplayNameDeclaringType = typeof(DataSet), DynamicDataDisplayName = nameof(DataSet.GetDisplayName))]
+        [TestCategory(BaselineHelper.BaselineTestCategory)]
         public void ValidBicepTextWriter_TemplateEmiterShouldProduceExpectedTemplate(DataSet dataSet)
         {
             var outputDirectory = dataSet.SaveFilesToTestDirectory(TestContext);
@@ -78,7 +80,7 @@ namespace Bicep.Core.IntegrationTests.Emit
 
             // emitting the template should be successful
             var result = this.EmitTemplate(SyntaxTreeGroupingBuilder.Build(BicepTestConstants.FileResolver, new Workspace(), PathHelper.FilePathToFileUrl(bicepFilePath)), memoryStream, BicepTestConstants.DevAssemblyFileVersion);
-            result.Diagnostics.Should().BeEmptyOrContainDeprecatedDiagnosticOnly();
+            result.Diagnostics.Should().NotHaveErrors();
             result.Status.Should().Be(EmitStatus.Succeeded);
 
             // normalizing the formatting in case there are differences in indentation
@@ -103,8 +105,8 @@ namespace Bicep.Core.IntegrationTests.Emit
 
             // emitting the template should fail
             var result = this.EmitTemplate(SyntaxTreeGroupingBuilder.Build(BicepTestConstants.FileResolver, new Workspace(), PathHelper.FilePathToFileUrl(bicepFilePath)), filePath, BicepTestConstants.DevAssemblyFileVersion);
-            result.Status.Should().Be(EmitStatus.Failed);
             result.Diagnostics.Should().NotBeEmpty();
+            result.Status.Should().Be(EmitStatus.Failed);
         }
 
         [DataTestMethod]
@@ -130,7 +132,7 @@ this
 
         private EmitResult EmitTemplate(SyntaxTreeGrouping syntaxTreeGrouping, string filePath, string assemblyFileVersion)
         {
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), syntaxTreeGrouping, new Mock<IFileResolver>().Object);
+            var compilation = new Compilation(TestTypeHelper.CreateEmptyProvider(), syntaxTreeGrouping, BicepTestConstants.FileResolver);
             var emitter = new TemplateEmitter(compilation.GetEntrypointSemanticModel(), assemblyFileVersion);
 
             using var stream = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
@@ -139,7 +141,7 @@ this
 
         private EmitResult EmitTemplate(SyntaxTreeGrouping syntaxTreeGrouping, MemoryStream memoryStream, string assemblyFileVersion)
         {
-            var compilation = new Compilation(TestResourceTypeProvider.Create(), syntaxTreeGrouping, new Mock<IFileResolver>().Object);
+            var compilation = new Compilation(TestTypeHelper.CreateEmptyProvider(), syntaxTreeGrouping, BicepTestConstants.FileResolver);
             var emitter = new TemplateEmitter(compilation.GetEntrypointSemanticModel(), assemblyFileVersion);
 
             TextWriter tw = new StreamWriter(memoryStream);
