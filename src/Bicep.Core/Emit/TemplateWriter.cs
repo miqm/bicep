@@ -95,7 +95,7 @@ namespace Bicep.Core.Emit
         {
             // Template is used for calcualting template hash, template jtoken is used for writing to file.
             var (template, templateJToken) = GenerateTemplateWithoutHash();
-            var templateHash = TemplateHelpers.ComputeTemplateHash(template.ToJToken());
+            var templateHash = TemplateHelpers.ComputeTemplateHash(templateJToken);
             if (templateJToken.SelectToken(GeneratorMetadataPath) is not JObject generatorObject)
             {
                 throw new InvalidOperationException($"generated template doesn't contain a generator object at the path {GeneratorMetadataPath}");
