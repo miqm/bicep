@@ -686,14 +686,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-Microsoft.CodeAnalysis.BannedApiAnalyzers 3.3.3 - MIT
+Microsoft.CodeAnalysis.BannedApiAnalyzers 3.3.4 - MIT
 
 
-(c) Microsoft Corporation.
-Copyright (c) .NET Foundation.
+(c) Microsoft Corporation
+Copyright (c) .NET Foundation
 Copyright (c) 2013 Scott Kirkland
 Copyright (c) 2012-2014 Mehdi Khalili
-Copyright (c) 2013-2014 Omar Khudeira
+Copyright (c) 2013-2014 Omar Khudeira (http://omar.io)
 
 MIT License
 
