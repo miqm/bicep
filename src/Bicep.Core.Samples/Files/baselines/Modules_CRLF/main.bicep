@@ -1,4 +1,4 @@
-﻿
+
 @sys.description('this is deployTimeSuffix param')
 param deployTimeSuffix string = newGuid()
 
@@ -369,3 +369,8 @@ module withSpace 'module with space.bicep' = {
 module folderWithSpace 'child/folder with space/child with space.bicep' = {
   name: 'childWithSpace'
 }
+
+// nameof
+
+var nameofModule = nameof(folderWithSpace)
+var nameofModuleParam = nameof(secureModuleCondition.outputs.exposedSecureString)

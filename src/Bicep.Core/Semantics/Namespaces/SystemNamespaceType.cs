@@ -1055,8 +1055,8 @@ namespace Bicep.Core.Semantics.Namespaces
                     .Build();
 
                 yield return new FunctionOverloadBuilder(LanguageConstants.NameofFunctionName)
-                    .WithGenericDescription("Returns the name of the specified parameter, variable, or resource.")
-                    .WithRequiredParameter("symbol", LanguageConstants.Any, "The parameter, variable, or resource to retrieve the name of.")
+                    .WithGenericDescription("Returns the name of a variable, resource, module or property as the string constant. Function is evaluated at compile time and has no effect during deployment.")
+                    .WithRequiredParameter("symbol", LanguageConstants.Any, "The variable, resource, module or property to produce the name.")
                     .WithReturnResultBuilder((model, diagnostics, call, argumentTypes) =>
                     {
                         var x = call.Arguments[0].Expression switch
@@ -1069,7 +1069,7 @@ namespace Bicep.Core.Semantics.Namespaces
                         };
                         if (x is null)
                         {
-                            return new(ErrorType.Create(DiagnosticBuilder.ForPosition(call.Arguments[0]).CompileTimeConstantRequired()));
+                            return new(ErrorType.Create(DiagnosticBuilder.ForPosition(call.Arguments[0]).ExpressionDoesNotHaveAName()));
                         }
                         return new(new StringLiteralType(x, TypeSymbolValidationFlags.Default));
                     }, LanguageConstants.String)
