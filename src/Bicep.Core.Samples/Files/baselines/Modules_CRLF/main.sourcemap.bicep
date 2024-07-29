@@ -2189,7 +2189,7 @@ var vaults = [
 ]
 var secrets = [
 //@    "secrets": [
-//@    ]
+//@    ],
   {
 //@      {
 //@      },

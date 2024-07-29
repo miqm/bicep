@@ -12,20 +12,22 @@ namespace Bicep.Core.IntegrationTests.Scenarios
     [TestClass]
     public class NameofFunctionTests
     {
-        [TestMethod]
-        public void NameofFunction_OnObjectProperty_ReturnsPropertyName()
+        [DataRow("prop",".prop")]
+        [DataRow("'complex-prop'","['complex-prop']")]
+        [DataTestMethod]
+        public void NameofFunction_OnObjectProperty_ReturnsPropertyName(string propertyName, string propertyAccess)
         {
-            var result = CompilationHelper.Compile("""
+            var result = CompilationHelper.Compile($$"""
 var obj = {
-  prop: 'value'
+  {{propertyName}}: 'value'
 }
-output name string = nameof(obj.prop)
+output name string = nameof(obj{{propertyAccess}})
 """);
 
             using (new AssertionScope())
             {
                 result.Should().NotHaveAnyCompilationBlockingDiagnostics();
-                result.Template.Should().HaveValueAtPath("$.outputs['name'].value", "prop");
+                result.Template.Should().HaveValueAtPath("$.outputs['name'].value", propertyName);
             }
         }
 
@@ -128,6 +130,37 @@ output name string = nameof(sqlServer::databases)
             {
                 result.Should().NotHaveAnyCompilationBlockingDiagnostics();
                 result.Template.Should().HaveValueAtPath("$.outputs['name'].value", "databases");
+            }
+        }
+
+        [TestMethod]
+        public void NameofFunction_OnLoopedResourceProperty_ReturnsResourcePropertyName()
+        {
+            var result = CompilationHelper.Compile("""
+
+var dbs = [
+  'primary'
+  'secondary'
+  'tertiary'
+]
+   
+resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
+  name: 'sql-server-name'
+
+  @batchSize(1)
+  resource databases 'databases' = [for db in dbs: {
+    name: db
+  }]
+}
+
+output name string = nameof(sqlServer::databases[100].properties.collation)
+""");
+
+
+            using (new AssertionScope())
+            {
+                result.Should().NotHaveAnyCompilationBlockingDiagnostics();
+                result.Template.Should().HaveValueAtPath("$.outputs['name'].value", "collation");
             }
         }
 

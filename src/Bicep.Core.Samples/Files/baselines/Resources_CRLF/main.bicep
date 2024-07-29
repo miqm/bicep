@@ -291,7 +291,7 @@ resource extension3 'My.Rp/extensionResource@2020-12-01' = {
 
 /*
   valid loop cases
-*/ 
+*/
 var storageAccounts = [
   {
     name: 'one'
@@ -332,7 +332,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2020-06-01' = [for i in range(0
   properties: {
     subnets: [for j in range(0, 4): {
       // #completionTest(0,1,2,3,4,5) -> subnetIdAndProperties
-     
+
       // #completionTest(6) -> subnetIdAndPropertiesNoColon
       name: 'subnet-${i}-${j}'
     }]
@@ -529,12 +529,10 @@ var nameof5 = nameof(sqlServer::sqlDatabases[0].id)
 
 var sqlConfig = {
   westus: {}
-  server: {}
-  'my-rg': {}
+  'server-name': {}
 }
 
 resource sqlServerWithNameof 'Microsoft.Sql/servers@2021-11-01' = {
-  name: 'sql-server-nameof-${nameof(sqlConfig.server)}'
+  name: 'sql-server-nameof-${nameof(sqlConfig['server-name'])}'
   location: nameof(sqlConfig.westus)
-  scope: resourceGroup(nameof(sqlConfig['my-rg']))
 }

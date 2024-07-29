@@ -555,12 +555,10 @@ var nameof5 = nameof(sqlServer::sqlDatabases[0].id)
 
 var sqlConfig = {
   westus: {}
-  server: {}
-  'my-rg': {}
+  'server-name': {}
 }
 
 resource sqlServerWithNameof 'Microsoft.Sql/servers@2021-11-01' = {
-  name: 'sql-server-nameof-${nameof(sqlConfig.server)}'
+  name: 'sql-server-nameof-${nameof(sqlConfig['server-name'])}'
   location: nameof(sqlConfig.westus)
-  scope: resourceGroup(nameof(sqlConfig['my-rg']))
 }

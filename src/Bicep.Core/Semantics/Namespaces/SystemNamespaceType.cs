@@ -1065,6 +1065,7 @@ namespace Bicep.Core.Semantics.Namespaces
                             PropertyAccessSyntax propertyAccess => propertyAccess.PropertyName.IdentifierName,
                             ResourceAccessSyntax resourceAccess => resourceAccess.ResourceName.IdentifierName,
                             ModuleDeclarationSyntax moduleDeclaration => moduleDeclaration.Name.IdentifierName,
+                            ArrayAccessSyntax arrayAccess => arrayAccess.IndexExpression.ToString(),
                             _ => null,
                         };
                         if (x is null)
@@ -1081,6 +1082,7 @@ namespace Bicep.Core.Semantics.Namespaces
                             PropertyAccessSyntax propertyAccess => propertyAccess.PropertyName.IdentifierName,
                             ResourceAccessSyntax resourceAccess => resourceAccess.ResourceName.IdentifierName,
                             ModuleDeclarationSyntax moduleDeclaration => moduleDeclaration.Name.IdentifierName,
+                            ArrayAccessSyntax arrayAccess => arrayAccess.IndexExpression.ToString(),
                             _ => string.Empty,
                         };
                         return new StringLiteralExpression(expression.Parameters[0].SourceSyntax, x);
