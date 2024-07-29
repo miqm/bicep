@@ -210,4 +210,4 @@ param decoratedArray array = [
     newGuid()
 ]
 
-param nameof string = nameof(decoratedArray)
+param nameofParam string = nameof(decoratedArray)

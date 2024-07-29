@@ -1,5 +1,7 @@
 
-//@[000:13326) ProgramExpression
+//@[000:14050) ProgramExpression
+//@[000:00000) | └─ResourceDependencyExpression [UNPARENTED]
+//@[000:00000) |   └─ResourceReferenceExpression [UNPARENTED]
 //@[000:00000) | └─ResourceDependencyExpression [UNPARENTED]
 //@[000:00000) |   └─ResourceReferenceExpression [UNPARENTED]
 //@[000:00000) | └─ResourceDependencyExpression [UNPARENTED]
@@ -1345,8 +1347,8 @@ var dbs = ['db1', 'db2','db3']
 //@[018:00023) |   ├─StringLiteralExpression { Value = db2 }
 //@[024:00029) |   └─StringLiteralExpression { Value = db3 }
 resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
-//@[000:00416) ├─DeclaredResourceExpression
-//@[056:00416) | └─ObjectExpression
+//@[000:00572) ├─DeclaredResourceExpression
+//@[056:00572) | └─ObjectExpression
   name: 'sql-server-name'
   location: 'polandcentral'
 //@[002:00027) |   └─ObjectPropertyExpression
@@ -1369,14 +1371,49 @@ resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
   }]
 
   @description('Primary Sql Database')
-//@[002:00136) ├─DeclaredResourceExpression
+//@[002:00292) ├─DeclaredResourceExpression
 //@[015:00037) | ├─StringLiteralExpression { Value = Primary Sql Database }
   resource primaryDb 'databases' = {
-//@[035:00096) | ├─ObjectExpression
+//@[035:00252) | ├─ObjectExpression
     name: 'primary-db'
     location: 'polandcentral'
+
+    resource threatProtection 'advancedThreatProtectionSettings' = {
 //@[004:00029) | | └─ObjectPropertyExpression
 //@[004:00012) | |   ├─StringLiteralExpression { Value = location }
 //@[014:00029) | |   └─StringLiteralExpression { Value = polandcentral }
+      name: 'Default'
+      properties: {
+//@[004:00154) ├─DeclaredResourceExpression
+//@[067:00154) | ├─ObjectExpression
+        state: 'Enabled'
+      }
+//@[006:00054) | | └─ObjectPropertyExpression
+//@[006:00016) | |   ├─StringLiteralExpression { Value = properties }
+//@[018:00054) | |   └─ObjectExpression
+    }
+//@[008:00024) | |     └─ObjectPropertyExpression
+//@[008:00013) | |       ├─StringLiteralExpression { Value = state }
+//@[015:00024) | |       └─StringLiteralExpression { Value = Enabled }
   }
 }
+
+//nameof
+var nameof1 = nameof(sqlServer)
+var nameof2 = nameof(sqlServer.location)
+var nameof3 = nameof(sqlServer::primaryDb.properties.minCapacity)
+var nameof4 = nameof(sqlServer::primaryDb::threatProtection.properties.creationTime)
+var nameof5 = nameof(sqlServer::sqlDatabases[0].id)
+
+var sqlConfig = {
+  westus: {}
+  server: {}
+  'my-rg': {}
+}
+
+resource sqlServerWithNameof 'Microsoft.Sql/servers@2021-11-01' = {
+  name: 'sql-server-nameof-${nameof(sqlConfig.server)}'
+  location: nameof(sqlConfig.westus)
+  scope: resourceGroup(nameof(sqlConfig['my-rg']))
+}
+

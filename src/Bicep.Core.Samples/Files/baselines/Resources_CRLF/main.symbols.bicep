@@ -594,7 +594,7 @@ output p4_res1childid string = p4_child1.id
 var dbs = ['db1', 'db2','db3']
 //@[04:007) Variable dbs. Type: ['db1', 'db2', 'db3']. Declaration start char: 0, length: 30
 resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
-//@[09:018) Resource sqlServer. Type: Microsoft.Sql/servers@2021-11-01. Declaration start char: 0, length: 416
+//@[09:018) Resource sqlServer. Type: Microsoft.Sql/servers@2021-11-01. Declaration start char: 0, length: 572
   name: 'sql-server-name'
   location: 'polandcentral'
 
@@ -609,8 +609,37 @@ resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
 
   @description('Primary Sql Database')
   resource primaryDb 'databases' = {
-//@[11:020) Resource primaryDb. Type: Microsoft.Sql/servers/databases@2021-11-01. Declaration start char: 2, length: 134
+//@[11:020) Resource primaryDb. Type: Microsoft.Sql/servers/databases@2021-11-01. Declaration start char: 2, length: 290
     name: 'primary-db'
     location: 'polandcentral'
+
+    resource threatProtection 'advancedThreatProtectionSettings' = {
+      name: 'Default'
+      properties: {
+//@[13:029) Resource threatProtection. Type: Microsoft.Sql/servers/databases/advancedThreatProtectionSettings@2021-11-01. Declaration start char: 4, length: 150
+        state: 'Enabled'
+      }
+    }
   }
 }
+
+//nameof
+var nameof1 = nameof(sqlServer)
+var nameof2 = nameof(sqlServer.location)
+var nameof3 = nameof(sqlServer::primaryDb.properties.minCapacity)
+var nameof4 = nameof(sqlServer::primaryDb::threatProtection.properties.creationTime)
+var nameof5 = nameof(sqlServer::sqlDatabases[0].id)
+
+var sqlConfig = {
+  westus: {}
+  server: {}
+  'my-rg': {}
+}
+
+resource sqlServerWithNameof 'Microsoft.Sql/servers@2021-11-01' = {
+  name: 'sql-server-nameof-${nameof(sqlConfig.server)}'
+  location: nameof(sqlConfig.westus)
+  scope: resourceGroup(nameof(sqlConfig['my-rg']))
+}
+
+//@[04:011) Variable nameof1. Type: 'sqlServer'. Declaration start char: 0, length: 31

@@ -532,6 +532,7 @@ var sqlConfig = {
   server: {}
   'my-rg': {}
 }
+
 resource sqlServerWithNameof 'Microsoft.Sql/servers@2021-11-01' = {
   name: 'sql-server-nameof-${nameof(sqlConfig.server)}'
   location: nameof(sqlConfig.westus)

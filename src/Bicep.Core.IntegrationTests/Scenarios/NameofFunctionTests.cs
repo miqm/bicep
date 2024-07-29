@@ -144,14 +144,14 @@ output name string = nameof(sqlServer::databases)
    name: 'storage123'
  }
 
- output name string = nameof(myStorage.{{resourceProperty}})
+ var name = nameof(myStorage.{{resourceProperty}})
 
  """);
 
             using (new AssertionScope())
             {
                 result.Should().NotHaveAnyCompilationBlockingDiagnostics();
-                result.Template.Should().HaveValueAtPath("$.outputs['name'].value", expectedValue);
+                result.Template.Should().HaveValueAtPath("$.variables['name']", expectedValue);
             }
         }
 

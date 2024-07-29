@@ -1,5 +1,5 @@
 
-//@[000:13326) ProgramSyntax
+//@[000:14050) ProgramSyntax
 //@[000:00002) ├─Token(NewLine) |\r\n|
 @sys.description('this is basicStorage')
 //@[000:00225) ├─ResourceDeclarationSyntax
@@ -3926,14 +3926,14 @@ var dbs = ['db1', 'db2','db3']
 //@[029:00030) |   └─Token(RightSquare) |]|
 //@[030:00032) ├─Token(NewLine) |\r\n|
 resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
-//@[000:00416) ├─ResourceDeclarationSyntax
+//@[000:00572) ├─ResourceDeclarationSyntax
 //@[000:00008) | ├─Token(Identifier) |resource|
 //@[009:00018) | ├─IdentifierSyntax
 //@[009:00018) | | └─Token(Identifier) |sqlServer|
 //@[019:00053) | ├─StringSyntax
 //@[019:00053) | | └─Token(StringComplete) |'Microsoft.Sql/servers@2021-11-01'|
 //@[054:00055) | ├─Token(Assignment) |=|
-//@[056:00416) | └─ObjectSyntax
+//@[056:00572) | └─ObjectSyntax
 //@[056:00057) |   ├─Token(LeftBrace) |{|
 //@[057:00059) |   ├─Token(NewLine) |\r\n|
   name: 'sql-server-name'
@@ -4022,7 +4022,7 @@ resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
 //@[004:00008) |   ├─Token(NewLine) |\r\n\r\n|
 
   @description('Primary Sql Database')
-//@[002:00136) |   ├─ResourceDeclarationSyntax
+//@[002:00292) |   ├─ResourceDeclarationSyntax
 //@[002:00038) |   | ├─DecoratorSyntax
 //@[002:00003) |   | | ├─Token(At) |@|
 //@[003:00038) |   | | └─FunctionCallSyntax
@@ -4041,7 +4041,7 @@ resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
 //@[021:00032) |   | ├─StringSyntax
 //@[021:00032) |   | | └─Token(StringComplete) |'databases'|
 //@[033:00034) |   | ├─Token(Assignment) |=|
-//@[035:00096) |   | └─ObjectSyntax
+//@[035:00252) |   | └─ObjectSyntax
 //@[035:00036) |   |   ├─Token(LeftBrace) |{|
 //@[036:00038) |   |   ├─Token(NewLine) |\r\n|
     name: 'primary-db'
@@ -4053,16 +4053,94 @@ resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
 //@[010:00022) |   |   |   └─Token(StringComplete) |'primary-db'|
 //@[022:00024) |   |   ├─Token(NewLine) |\r\n|
     location: 'polandcentral'
+
+    resource threatProtection 'advancedThreatProtectionSettings' = {
 //@[004:00029) |   |   ├─ObjectPropertySyntax
 //@[004:00012) |   |   | ├─IdentifierSyntax
 //@[004:00012) |   |   | | └─Token(Identifier) |location|
 //@[012:00013) |   |   | ├─Token(Colon) |:|
 //@[014:00029) |   |   | └─StringSyntax
 //@[014:00029) |   |   |   └─Token(StringComplete) |'polandcentral'|
-//@[029:00031) |   |   ├─Token(NewLine) |\r\n|
+//@[029:00031) |   |   ├─Token(NewLine) |\n\n|
+      name: 'Default'
+      properties: {
+//@[004:00154) |   |   ├─ResourceDeclarationSyntax
+//@[004:00012) |   |   | ├─Token(Identifier) |resource|
+//@[013:00029) |   |   | ├─IdentifierSyntax
+//@[013:00029) |   |   | | └─Token(Identifier) |threatProtection|
+//@[030:00064) |   |   | ├─StringSyntax
+//@[030:00064) |   |   | | └─Token(StringComplete) |'advancedThreatProtectionSettings'|
+//@[065:00066) |   |   | ├─Token(Assignment) |=|
+//@[067:00154) |   |   | └─ObjectSyntax
+//@[067:00068) |   |   |   ├─Token(LeftBrace) |{|
+//@[068:00070) |   |   |   ├─Token(NewLine) |\r\n|
+        state: 'Enabled'
+//@[006:00021) |   |   |   ├─ObjectPropertySyntax
+//@[006:00010) |   |   |   | ├─IdentifierSyntax
+//@[006:00010) |   |   |   | | └─Token(Identifier) |name|
+//@[010:00011) |   |   |   | ├─Token(Colon) |:|
+//@[012:00021) |   |   |   | └─StringSyntax
+//@[012:00021) |   |   |   |   └─Token(StringComplete) |'Default'|
+//@[021:00023) |   |   |   ├─Token(NewLine) |\r\n|
+      }
+//@[006:00054) |   |   |   ├─ObjectPropertySyntax
+//@[006:00016) |   |   |   | ├─IdentifierSyntax
+//@[006:00016) |   |   |   | | └─Token(Identifier) |properties|
+//@[016:00017) |   |   |   | ├─Token(Colon) |:|
+//@[018:00054) |   |   |   | └─ObjectSyntax
+//@[018:00019) |   |   |   |   ├─Token(LeftBrace) |{|
+//@[019:00021) |   |   |   |   ├─Token(NewLine) |\r\n|
+    }
+//@[008:00024) |   |   |   |   ├─ObjectPropertySyntax
+//@[008:00013) |   |   |   |   | ├─IdentifierSyntax
+//@[008:00013) |   |   |   |   | | └─Token(Identifier) |state|
+//@[013:00014) |   |   |   |   | ├─Token(Colon) |:|
+//@[015:00024) |   |   |   |   | └─StringSyntax
+//@[015:00024) |   |   |   |   |   └─Token(StringComplete) |'Enabled'|
+//@[024:00026) |   |   |   |   ├─Token(NewLine) |\r\n|
   }
+//@[006:00007) |   |   |   |   └─Token(RightBrace) |}|
+//@[007:00009) |   |   |   ├─Token(NewLine) |\r\n|
+}
+
+//nameof
+var nameof1 = nameof(sqlServer)
+var nameof2 = nameof(sqlServer.location)
+var nameof3 = nameof(sqlServer::primaryDb.properties.minCapacity)
+//@[004:00005) |   |   |   └─Token(RightBrace) |}|
+//@[005:00007) |   |   ├─Token(NewLine) |\r\n|
+var nameof4 = nameof(sqlServer::primaryDb::threatProtection.properties.creationTime)
 //@[002:00003) |   |   └─Token(RightBrace) |}|
 //@[003:00005) |   ├─Token(NewLine) |\r\n|
-}
+var nameof5 = nameof(sqlServer::sqlDatabases[0].id)
+
+var sqlConfig = {
+  westus: {}
+  server: {}
+  'my-rg': {}
 //@[000:00001) |   └─Token(RightBrace) |}|
-//@[001:00001) └─Token(EndOfFile) ||
+//@[001:00003) ├─Token(NewLine) |\n\n|
+}
+
+resource sqlServerWithNameof 'Microsoft.Sql/servers@2021-11-01' = {
+  name: 'sql-server-nameof-${nameof(sqlConfig.server)}'
+//@[008:00009) ├─Token(NewLine) |\n|
+  location: nameof(sqlConfig.westus)
+  scope: resourceGroup(nameof(sqlConfig['my-rg']))
+}
+
+//@[000:00031) ├─VariableDeclarationSyntax
+//@[000:00003) | ├─Token(Identifier) |var|
+//@[004:00011) | ├─IdentifierSyntax
+//@[004:00011) | | └─Token(Identifier) |nameof1|
+//@[012:00013) | ├─Token(Assignment) |=|
+//@[014:00031) | └─FunctionCallSyntax
+//@[014:00020) |   ├─IdentifierSyntax
+//@[014:00020) |   | └─Token(Identifier) |nameof|
+//@[020:00021) |   ├─Token(LeftParen) |(|
+//@[021:00030) |   ├─FunctionArgumentSyntax
+//@[021:00030) |   | └─VariableAccessSyntax
+//@[021:00030) |   |   └─IdentifierSyntax
+//@[021:00030) |   |     └─Token(Identifier) |sqlServer|
+//@[030:00031) |   └─Token(RightParen) |)|
+//@[031:00032) ├─Token(NewLine) |\n|

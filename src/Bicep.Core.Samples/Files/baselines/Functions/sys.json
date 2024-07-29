@@ -1130,11 +1130,11 @@
   },
   {
     "name": "nameof",
-    "description": "Returns the name of the specified parameter, variable, or resource.",
+    "description": "Returns the name of a variable, resource, module or property as the string constant. Function is evaluated at compile time and has no effect during deployment.",
     "fixedParameters": [
       {
         "name": "symbol",
-        "description": "The parameter, variable, or resource to retrieve the name of.",
+        "description": "The variable, resource, module or property to produce the name.",
         "type": "any",
         "required": true
       }

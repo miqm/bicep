@@ -2566,13 +2566,71 @@ resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
 //@[010:022) StringComplete |'primary-db'|
 //@[022:024) NewLine |\r\n|
     location: 'polandcentral'
+
+    resource threatProtection 'advancedThreatProtectionSettings' = {
 //@[004:012) Identifier |location|
 //@[012:013) Colon |:|
 //@[014:029) StringComplete |'polandcentral'|
-//@[029:031) NewLine |\r\n|
+//@[029:031) NewLine |\n\n|
+      name: 'Default'
+      properties: {
+//@[004:012) Identifier |resource|
+//@[013:029) Identifier |threatProtection|
+//@[030:064) StringComplete |'advancedThreatProtectionSettings'|
+//@[065:066) Assignment |=|
+//@[067:068) LeftBrace |{|
+//@[068:070) NewLine |\r\n|
+        state: 'Enabled'
+//@[006:010) Identifier |name|
+//@[010:011) Colon |:|
+//@[012:021) StringComplete |'Default'|
+//@[021:023) NewLine |\r\n|
+      }
+//@[006:016) Identifier |properties|
+//@[016:017) Colon |:|
+//@[018:019) LeftBrace |{|
+//@[019:021) NewLine |\r\n|
+    }
+//@[008:013) Identifier |state|
+//@[013:014) Colon |:|
+//@[015:024) StringComplete |'Enabled'|
+//@[024:026) NewLine |\r\n|
   }
+//@[006:007) RightBrace |}|
+//@[007:009) NewLine |\r\n|
+}
+
+//nameof
+var nameof1 = nameof(sqlServer)
+var nameof2 = nameof(sqlServer.location)
+var nameof3 = nameof(sqlServer::primaryDb.properties.minCapacity)
+//@[004:005) RightBrace |}|
+//@[005:007) NewLine |\r\n|
+var nameof4 = nameof(sqlServer::primaryDb::threatProtection.properties.creationTime)
 //@[002:003) RightBrace |}|
 //@[003:005) NewLine |\r\n|
-}
+var nameof5 = nameof(sqlServer::sqlDatabases[0].id)
+
+var sqlConfig = {
+  westus: {}
+  server: {}
+  'my-rg': {}
 //@[000:001) RightBrace |}|
-//@[001:001) EndOfFile ||
+//@[001:003) NewLine |\n\n|
+}
+
+resource sqlServerWithNameof 'Microsoft.Sql/servers@2021-11-01' = {
+  name: 'sql-server-nameof-${nameof(sqlConfig.server)}'
+//@[008:009) NewLine |\n|
+  location: nameof(sqlConfig.westus)
+  scope: resourceGroup(nameof(sqlConfig['my-rg']))
+}
+
+//@[000:003) Identifier |var|
+//@[004:011) Identifier |nameof1|
+//@[012:013) Assignment |=|
+//@[014:020) Identifier |nameof|
+//@[020:021) LeftParen |(|
+//@[021:030) Identifier |sqlServer|
+//@[030:031) RightParen |)|
+//@[031:032) NewLine |\n|
